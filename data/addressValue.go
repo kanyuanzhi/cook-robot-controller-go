@@ -1,13 +1,19 @@
 package data
 
+import "fmt"
+
 type AddressValue struct {
-	address string
-	value   uint32
+	Address string
+	Value   uint32
 }
 
 func NewAddressValue(address string, value uint32) *AddressValue {
 	return &AddressValue{
-		address: address,
-		value:   value,
+		Address: address,
+		Value:   value,
 	}
+}
+
+func (a *AddressValue) ToString() string {
+	return fmt.Sprintf("(%s, %d)", a.Address, a.Value)
 }
