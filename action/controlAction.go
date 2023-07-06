@@ -281,25 +281,25 @@ func (l *LampblackPurifyControlAction) AfterExecuteInfo() string {
 		l.StatusWordAddress)
 }
 
-// DoorLockControlAction 电磁门锁动作
-type DoorLockControlAction struct {
+// DoorUnlockControlAction 电磁门锁动作
+type DoorUnlockControlAction struct {
 	*ControlAction
 }
 
-func NewDoorLockControlAction(controlWordAddress string, statusWordAddress string) *DoorLockControlAction {
-	doorLockControlAction := &DoorLockControlAction{
+func NewDoorUnlockControlAction(controlWordAddress string, statusWordAddress string) *DoorUnlockControlAction {
+	doorLockControlAction := &DoorUnlockControlAction{
 		ControlAction: NewControlAction(controlWordAddress, statusWordAddress),
 	}
 	return doorLockControlAction
 }
 
-func (d *DoorLockControlAction) BeforeExecuteInfo() string {
+func (d *DoorUnlockControlAction) BeforeExecuteInfo() string {
 	return fmt.Sprintf("[开始]电磁门解锁,发送(%s,%d),状态字地址%s",
 		d.ControlWordAddress, 1,
 		d.StatusWordAddress)
 }
 
-func (d *DoorLockControlAction) AfterExecuteInfo() string {
+func (d *DoorUnlockControlAction) AfterExecuteInfo() string {
 	return fmt.Sprintf("[结束]电磁门解锁,发送(%s,%d),状态字地址%s",
 		d.ControlWordAddress, 1,
 		d.StatusWordAddress)

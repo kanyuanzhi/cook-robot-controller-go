@@ -2,33 +2,29 @@ package operator
 
 import (
 	"cook-robot-controller-go/data"
-	"net"
+	"cook-robot-controller-go/modbus"
 	"time"
 )
 
 type Writer struct {
-	connection net.Conn
+	tcpServer *modbus.TCPServer
 }
 
-func NewWriter() *Writer {
-	writer := &Writer{}
+func NewWriter(tcpServer *modbus.TCPServer) *Writer {
+	writer := &Writer{
+		tcpServer: tcpServer,
+	}
 	return writer
 }
 
-func (w *Writer) Run() {
-	//serverAddr := "127.0.0.1:10001"
-	//conn, err := net.Dial("tcp", serverAddr)
-	//if err != nil {
-	//	logger.Log.Println("无法建立TCP连接:", err)
-	//}
-	//w.connection = conn
-}
-
 func (w *Writer) Send(successChan chan bool, addressValueList []*data.AddressValue) {
-	//addressValueList := a.GetAddressValueList()
 	//logger.Log.Println(a.ShowAddressValueList())
 	//w.connection.Write([]byte("123"))
-	time.Sleep(100 * time.Millisecond)
+	time.Sleep(50 * time.Millisecond)
+	for _, addressValue := range addressValueList {
+		w.tcpServer.Write(addressValue.Address, uint64(addressValue.Value))
+	}
+	//time.Sleep(100 * time.Millisecond)
 	//logger.Log.Println(addressValueList)
 	successChan <- true
 }

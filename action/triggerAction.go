@@ -20,6 +20,7 @@ func NewTriggerAction(triggerAddressValue *data.AddressValue) *TriggerAction {
 }
 
 func (t *TriggerAction) Execute(writer *operator.Writer, reader *operator.Reader) {
+	time.Sleep(50 * time.Millisecond) // 延时50ms执行trig，确保状态字重置
 	ticker := time.NewTicker(50 * time.Millisecond)
 	defer ticker.Stop()
 	for {
