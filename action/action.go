@@ -20,6 +20,8 @@ const (
 	DELAY   ActionType = iota + 1 // 延时动作
 	TRIGGER                       // 触发动作
 	CONTROL                       // 控制动作
+	STOP
+	GROUP
 )
 
 type BaseAction struct {

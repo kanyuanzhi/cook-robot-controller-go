@@ -8,10 +8,10 @@ import (
 
 type DelayAction struct {
 	*BaseAction
-	Delay int64 // 延时
+	Delay uint32 // 延时，毫秒
 }
 
-func NewDelayAction(delay int64) *DelayAction {
+func NewDelayAction(delay uint32) *DelayAction {
 	return &DelayAction{
 		BaseAction: newBaseAction(DELAY),
 		Delay:      delay,

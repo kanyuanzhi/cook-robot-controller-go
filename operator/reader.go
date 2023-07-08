@@ -30,11 +30,11 @@ func NewReader(tcpServer *modbus.TCPServer) *Reader {
 
 	realtimeValueMap[data.DISH_OUT_STATUS_WORD_ADDRESS] = 100
 
-	realtimeValueMap[data.PUMP_STATUS_WORD_ADDRESS] = 100
+	//realtimeValueMap[data.PUMP_STATUS_WORD_ADDRESS] = 100
 
 	realtimeValueMap[data.LAMPBLACK_PURIFY_STATUS_WORD_ADDRESS] = 100
 
-	realtimeValueMap[data.DOOR_LOCK_STATUS_WORD_ADDRESS] = 100
+	realtimeValueMap[data.DOOR_UNLOCK_STATUS_WORD_ADDRESS] = 100
 
 	realtimeValueMap[data.TEMPERATURE_STATUS_WORD_ADDRESS] = 100
 	realtimeValueMap[data.TEMPERATURE_BOTTOM_ADDRESS] = 0
@@ -49,9 +49,9 @@ func NewReader(tcpServer *modbus.TCPServer) *Reader {
 }
 
 func (r *Reader) Trig(address string, targetValue uint32) bool {
-	r.tcpServer.Read("DS0", 120)
+	r.tcpServer.Read("DS200", 120)
 	if realtimeValue, has := r.tcpServer.RealtimeValueMap[address]; has {
-		if realtimeValue >= targetValue {
+		if realtimeValue == targetValue {
 			return true
 		} else {
 			return false

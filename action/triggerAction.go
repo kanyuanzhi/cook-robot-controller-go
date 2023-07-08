@@ -20,7 +20,7 @@ func NewTriggerAction(triggerAddressValue *data.AddressValue) *TriggerAction {
 }
 
 func (t *TriggerAction) Execute(writer *operator.Writer, reader *operator.Reader) {
-	time.Sleep(50 * time.Millisecond) // 延时50ms执行trig，确保状态字重置
+	time.Sleep(60 * time.Millisecond) // 延时50ms执行trig，确保状态字重置
 	ticker := time.NewTicker(50 * time.Millisecond)
 	defer ticker.Stop()
 	for {
@@ -34,9 +34,9 @@ func (t *TriggerAction) Execute(writer *operator.Writer, reader *operator.Reader
 }
 
 func (t *TriggerAction) BeforeExecuteInfo() string {
-	return fmt.Sprintf("[等待]触发%s>=%d", t.TriggerAddressValue.Address, t.TriggerAddressValue.Value)
+	return fmt.Sprintf("[等待]触发%s=%d", t.TriggerAddressValue.Address, t.TriggerAddressValue.Value)
 }
 
 func (t *TriggerAction) AfterExecuteInfo() string {
-	return fmt.Sprintf("[结束]触发%s>=%d", t.TriggerAddressValue.Address, t.TriggerAddressValue.Value)
+	return fmt.Sprintf("[结束]触发%s=%d", t.TriggerAddressValue.Address, t.TriggerAddressValue.Value)
 }

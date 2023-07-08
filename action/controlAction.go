@@ -6,12 +6,6 @@ import (
 	"fmt"
 )
 
-//type ControlActioner interface {
-//	StopControlAction | AxleResetControlAction | AxleLocateControlAction | AxleRotateControlAction |
-//		DishOutControlAction | PumpControlAction | LampblackPurifyControlAction | DoorLockControlAction |
-//		TemperatureControlAction
-//}
-
 // ControlAction 控制动作基类
 type ControlAction struct {
 	*BaseAction
@@ -29,14 +23,6 @@ func NewControlAction(controlWordAddress string, statusWordAddress string) *Cont
 	}
 }
 
-func (c *ControlAction) addressValueListToString() string {
-	str := ""
-	for _, addressValue := range c.AddressValueList {
-		str += fmt.Sprintf("%s,", addressValue.ToString())
-	}
-	return str
-}
-
 func (c *ControlAction) Execute(writer *operator.Writer, reader *operator.Reader) {
 	successChan := make(chan bool)
 	defer close(successChan)
@@ -49,50 +35,38 @@ func (c *ControlAction) GetStatusWordAddress() string {
 	return c.StatusWordAddress
 }
 
-// StopControlAction 停止动作
-type StopControlAction struct {
+// AxisResetControlAction 轴重置动作
+type AxisResetControlAction struct {
 	*ControlAction
 }
 
-func NewStopControlAction(controlWordAddress string, statusWordAddress string) *StopControlAction {
-	stopControlAction := &StopControlAction{
-		ControlAction: NewControlAction(controlWordAddress, statusWordAddress),
-	}
-	return stopControlAction
-}
-
-// AxleResetControlAction 轴重置动作
-type AxleResetControlAction struct {
-	*ControlAction
-}
-
-func NewAxleResetControlAction(controlWordAddress string, statusWordAddress string) *AxleResetControlAction {
-	axleResetControlAction := &AxleResetControlAction{
+func NewAxisResetControlAction(controlWordAddress string, statusWordAddress string) *AxisResetControlAction {
+	axleResetControlAction := &AxisResetControlAction{
 		ControlAction: NewControlAction(controlWordAddress, statusWordAddress),
 	}
 	return axleResetControlAction
 }
 
-func (a *AxleResetControlAction) BeforeExecuteInfo() string {
+func (a *AxisResetControlAction) BeforeExecuteInfo() string {
 	return fmt.Sprintf("[开始]%s轴复位,发送(%s,%d),状态字地址%s",
-		data.AddressToAxle[a.ControlWordAddress], a.ControlWordAddress, 1, a.StatusWordAddress)
+		data.AxisControlWordAddressToAxis[a.ControlWordAddress], a.ControlWordAddress, 1, a.StatusWordAddress)
 }
 
-func (a *AxleResetControlAction) AfterExecuteInfo() string {
+func (a *AxisResetControlAction) AfterExecuteInfo() string {
 	return fmt.Sprintf("[结束]%s轴复位,发送(%s,%d),状态字地址%s",
-		data.AddressToAxle[a.ControlWordAddress], a.ControlWordAddress, 1, a.StatusWordAddress)
+		data.AxisControlWordAddressToAxis[a.ControlWordAddress], a.ControlWordAddress, 1, a.StatusWordAddress)
 }
 
-// AxleLocateControlAction 轴定位动作
-type AxleLocateControlAction struct {
+// AxisLocateControlAction 轴定位动作
+type AxisLocateControlAction struct {
 	*ControlAction
 	targetPosition *data.AddressValue // 目标位置
 	speed          *data.AddressValue // 移动速度
 }
 
-func NewAxleLocateControlAction(controlWordAddress string, statusWordAddress string,
-	targetPosition *data.AddressValue, speed *data.AddressValue) *AxleLocateControlAction {
-	axleLocateControlAction := &AxleLocateControlAction{
+func NewAxisLocateControlAction(controlWordAddress string, statusWordAddress string,
+	targetPosition *data.AddressValue, speed *data.AddressValue) *AxisLocateControlAction {
+	axleLocateControlAction := &AxisLocateControlAction{
 		ControlAction:  NewControlAction(controlWordAddress, statusWordAddress),
 		targetPosition: targetPosition,
 		speed:          speed,
@@ -102,35 +76,35 @@ func NewAxleLocateControlAction(controlWordAddress string, statusWordAddress str
 	return axleLocateControlAction
 }
 
-func (a *AxleLocateControlAction) BeforeExecuteInfo() string {
+func (a *AxisLocateControlAction) BeforeExecuteInfo() string {
 	return fmt.Sprintf("[开始]%s轴定位%d,速度%d,发送(%s,%d),(%s,%d),(%s,%d),状态字地址%s",
-		data.AddressToAxle[a.ControlWordAddress], a.targetPosition.Value, a.speed.Value,
+		data.AxisControlWordAddressToAxis[a.ControlWordAddress], a.targetPosition.Value, a.speed.Value,
 		a.ControlWordAddress, 1,
 		a.targetPosition.Address, a.targetPosition.Value,
 		a.speed.Address, a.speed.Value,
 		a.StatusWordAddress)
 }
 
-func (a *AxleLocateControlAction) AfterExecuteInfo() string {
+func (a *AxisLocateControlAction) AfterExecuteInfo() string {
 	return fmt.Sprintf("[结束]%s轴定位%d,速度%d,发送(%s,%d),(%s,%d),(%s,%d),状态字地址%s",
-		data.AddressToAxle[a.ControlWordAddress], a.targetPosition.Value, a.speed.Value,
+		data.AxisControlWordAddressToAxis[a.ControlWordAddress], a.targetPosition.Value, a.speed.Value,
 		a.ControlWordAddress, 1,
 		a.targetPosition.Address, a.targetPosition.Value,
 		a.speed.Address, a.speed.Value,
 		a.StatusWordAddress)
 }
 
-// AxleRotateControlAction 旋转动作
-type AxleRotateControlAction struct {
+// AxisRotateControlAction 旋转动作
+type AxisRotateControlAction struct {
 	*ControlAction
 	mode             *data.AddressValue // 旋转模式
 	speed            *data.AddressValue // 旋转速度
 	rotationalAmount *data.AddressValue // 正反转圈数
 }
 
-func NewAxleRotateControlAction(controlWordAddress string, statusWordAddress string,
-	mode *data.AddressValue, speed *data.AddressValue, rotationalAmount *data.AddressValue) *AxleRotateControlAction {
-	axleRotateControlAction := &AxleRotateControlAction{
+func NewAxisRotateControlAction(controlWordAddress string, statusWordAddress string,
+	mode *data.AddressValue, speed *data.AddressValue, rotationalAmount *data.AddressValue) *AxisRotateControlAction {
+	axleRotateControlAction := &AxisRotateControlAction{
 		ControlAction:    NewControlAction(controlWordAddress, statusWordAddress),
 		mode:             mode,
 		speed:            speed,
@@ -141,7 +115,7 @@ func NewAxleRotateControlAction(controlWordAddress string, statusWordAddress str
 	return axleRotateControlAction
 }
 
-func (a *AxleRotateControlAction) BeforeExecuteInfo() string {
+func (a *AxisRotateControlAction) BeforeExecuteInfo() string {
 	return fmt.Sprintf("[开始]R1轴%s,速度%d,正反转圈数%d,发送(%s,%d),(%s,%d),(%s,%d),(%s,%d),状态字地址%s",
 		data.RotateModeToString[a.mode.Value], a.speed.Value, a.rotationalAmount.Value,
 		a.ControlWordAddress, 1,
@@ -151,7 +125,7 @@ func (a *AxleRotateControlAction) BeforeExecuteInfo() string {
 		a.StatusWordAddress)
 }
 
-func (a *AxleRotateControlAction) AfterExecuteInfo() string {
+func (a *AxisRotateControlAction) AfterExecuteInfo() string {
 	return fmt.Sprintf("[结束]R1轴%s,速度%d,正反转圈数%d,发送(%s,%d),(%s,%d),(%s,%d),(%s,%d),状态字地址%s",
 		data.RotateModeToString[a.mode.Value], a.speed.Value, a.rotationalAmount.Value,
 		a.ControlWordAddress, 1,
@@ -164,7 +138,7 @@ func (a *AxleRotateControlAction) AfterExecuteInfo() string {
 // DishOutControlAction 出菜动作
 type DishOutControlAction struct {
 	*ControlAction
-	shakeAmount      *data.AddressValue // 抖动次数
+	amount           *data.AddressValue // 抖动次数
 	upwardSpeed      *data.AddressValue // 上行速度
 	downwardSpeed    *data.AddressValue // 下行速度
 	upwardPosition   *data.AddressValue // 上行位置
@@ -172,26 +146,26 @@ type DishOutControlAction struct {
 }
 
 func NewDishOutControlAction(controlWordAddress string, statusWordAddress string,
-	shakeAmount *data.AddressValue, upwardSpeed *data.AddressValue, downwardSpeed *data.AddressValue,
+	amount *data.AddressValue, upwardSpeed *data.AddressValue, downwardSpeed *data.AddressValue,
 	upwardPosition *data.AddressValue, downwardPosition *data.AddressValue) *DishOutControlAction {
 	dishOutControlAction := &DishOutControlAction{
 		ControlAction:    NewControlAction(controlWordAddress, statusWordAddress),
-		shakeAmount:      shakeAmount,
+		amount:           amount,
 		upwardSpeed:      upwardSpeed,
 		downwardSpeed:    downwardSpeed,
 		upwardPosition:   upwardPosition,
 		downwardPosition: downwardPosition,
 	}
 	dishOutControlAction.ControlAction.AddressValueList = append(dishOutControlAction.ControlAction.AddressValueList,
-		shakeAmount, upwardSpeed, downwardSpeed, upwardPosition, downwardPosition)
+		amount, upwardSpeed, downwardSpeed, upwardPosition, downwardPosition)
 	return dishOutControlAction
 }
 
 func (d *DishOutControlAction) BeforeExecuteInfo() string {
 	return fmt.Sprintf("[开始]一键出菜,抖动次数%d,上行速度%d,下行速度%d,出菜高位%d,出菜低位%d,发送(%s,%d),(%s,%d),(%s,%d),(%s,%d),(%s,%d),(%s,%d),状态字地址%s",
-		d.shakeAmount.Value, d.upwardSpeed.Value, d.downwardSpeed.Value, d.upwardPosition.Value, d.downwardPosition.Value,
+		d.amount.Value, d.upwardSpeed.Value, d.downwardSpeed.Value, d.upwardPosition.Value, d.downwardPosition.Value,
 		d.ControlWordAddress, 1,
-		d.shakeAmount.Address, d.shakeAmount.Value,
+		d.amount.Address, d.amount.Value,
 		d.upwardSpeed.Address, d.upwardSpeed.Value,
 		d.downwardSpeed.Address, d.downwardSpeed.Value,
 		d.upwardPosition.Address, d.upwardPosition.Value,
@@ -201,9 +175,9 @@ func (d *DishOutControlAction) BeforeExecuteInfo() string {
 
 func (d *DishOutControlAction) AfterExecuteInfo() string {
 	return fmt.Sprintf("[结束]一键出菜,抖动次数%d,上行速度%d,下行速度%d,出菜高位%d,出菜低位%d,发送(%s,%d),(%s,%d),(%s,%d),(%s,%d),(%s,%d),(%s,%d),状态字地址%s",
-		d.shakeAmount.Value, d.upwardSpeed.Value, d.downwardSpeed.Value, d.upwardPosition.Value, d.downwardPosition.Value,
+		d.amount.Value, d.upwardSpeed.Value, d.downwardSpeed.Value, d.upwardPosition.Value, d.downwardPosition.Value,
 		d.ControlWordAddress, 1,
-		d.shakeAmount.Address, d.shakeAmount.Value,
+		d.amount.Address, d.amount.Value,
 		d.upwardSpeed.Address, d.upwardSpeed.Value,
 		d.downwardSpeed.Address, d.downwardSpeed.Value,
 		d.upwardPosition.Address, d.upwardPosition.Value,
@@ -211,39 +185,83 @@ func (d *DishOutControlAction) AfterExecuteInfo() string {
 		d.StatusWordAddress)
 }
 
+// ShakeControlAction 出菜动作
+type ShakeControlAction struct {
+	*ControlAction
+	amount        *data.AddressValue // 抖动次数
+	upwardSpeed   *data.AddressValue // 上行速度
+	downwardSpeed *data.AddressValue // 下行速度
+	distance      *data.AddressValue // 抖菜距离
+}
+
+func NewShakeControlAction(controlWordAddress string, statusWordAddress string,
+	amount *data.AddressValue, upwardSpeed *data.AddressValue, downwardSpeed *data.AddressValue,
+	distance *data.AddressValue) *ShakeControlAction {
+	shakeControlAction := &ShakeControlAction{
+		ControlAction: NewControlAction(controlWordAddress, statusWordAddress),
+		amount:        amount,
+		upwardSpeed:   upwardSpeed,
+		downwardSpeed: downwardSpeed,
+		distance:      distance,
+	}
+	shakeControlAction.ControlAction.AddressValueList = append(shakeControlAction.ControlAction.AddressValueList,
+		amount, upwardSpeed, downwardSpeed, distance)
+	return shakeControlAction
+}
+
+func (s *ShakeControlAction) BeforeExecuteInfo() string {
+	return fmt.Sprintf("[开始]菜盒抖菜,抖动次数%d,上行速度%d,下行速度%d,抖菜距离%d,发送(%s,%d),(%s,%d),(%s,%d),(%s,%d),(%s,%d),状态字地址%s",
+		s.amount.Value, s.upwardSpeed.Value, s.downwardSpeed.Value, s.distance.Value,
+		s.ControlWordAddress, 1,
+		s.amount.Address, s.amount.Value,
+		s.upwardSpeed.Address, s.upwardSpeed.Value,
+		s.downwardSpeed.Address, s.downwardSpeed.Value,
+		s.distance.Address, s.distance.Value,
+		s.StatusWordAddress)
+}
+
+func (s *ShakeControlAction) AfterExecuteInfo() string {
+	return fmt.Sprintf("[结束]菜盒抖菜,抖动次数%d,上行速度%d,下行速度%d,抖菜距离%d,发送(%s,%d),(%s,%d),(%s,%d),(%s,%d),(%s,%d),状态字地址%s",
+		s.amount.Value, s.upwardSpeed.Value, s.downwardSpeed.Value, s.distance.Value,
+		s.ControlWordAddress, 1,
+		s.amount.Address, s.amount.Value,
+		s.upwardSpeed.Address, s.upwardSpeed.Value,
+		s.downwardSpeed.Address, s.downwardSpeed.Value,
+		s.distance.Address, s.distance.Value,
+		s.StatusWordAddress)
+}
+
 // PumpControlAction 泵动作，液体泵1-6号、抽水泵7-8号、固体泵9-10号
 type PumpControlAction struct {
 	*ControlAction
-	number   *data.AddressValue // 泵号
 	duration *data.AddressValue // 泵开启时长 ms
 }
 
 func NewPumpControlAction(controlWordAddress string, statusWordAddress string,
-	number *data.AddressValue, duration *data.AddressValue) *PumpControlAction {
+	duration *data.AddressValue) *PumpControlAction {
 	pumpControlAction := &PumpControlAction{
 		ControlAction: NewControlAction(controlWordAddress, statusWordAddress),
-		number:        number,
 		duration:      duration,
 	}
 	pumpControlAction.ControlAction.AddressValueList = append(pumpControlAction.ControlAction.AddressValueList,
-		number, duration)
+		duration)
 	return pumpControlAction
 }
 
 func (p *PumpControlAction) BeforeExecuteInfo() string {
-	return fmt.Sprintf("[开始]%d号泵(%s)打开%d毫秒,发送(%s,%d),(%s,%d),(%s,%d),状态字地址%s",
-		p.number.Value, data.PumpNumberToString[p.number.Value], p.duration.Value,
+	return fmt.Sprintf("[开始]%d号泵(%s)打开%d毫秒,发送(%s,%d),(%s,%d),状态字地址%s",
+		data.PumpControlWordAddressToPumpNumber[p.ControlWordAddress],
+		data.PumpNumberToPumpType[data.PumpControlWordAddressToPumpNumber[p.ControlWordAddress]], p.duration.Value,
 		p.ControlWordAddress, 1,
-		p.number.Address, p.number.Value,
 		p.duration.Address, p.duration.Value,
 		p.StatusWordAddress)
 }
 
 func (p *PumpControlAction) AfterExecuteInfo() string {
-	return fmt.Sprintf("[结束]%d号泵(%s)打开%d毫秒,发送(%s,%d),(%s,%d),(%s,%d),状态字地址%s",
-		p.number.Value, data.PumpNumberToString[p.number.Value], p.duration.Value,
+	return fmt.Sprintf("[结束]%d号泵(%s)打开%d毫秒,发送(%s,%d),(%s,%d),状态字地址%s",
+		data.PumpControlWordAddressToPumpNumber[p.ControlWordAddress],
+		data.PumpNumberToPumpType[data.PumpControlWordAddressToPumpNumber[p.ControlWordAddress]], p.duration.Value,
 		p.ControlWordAddress, 1,
-		p.number.Address, p.number.Value,
 		p.duration.Address, p.duration.Value,
 		p.StatusWordAddress)
 }
@@ -318,7 +336,9 @@ func NewTemperatureControlAction(controlWordAddress string, statusWordAddress st
 		targetTemperature: targetTemperature,
 	}
 	temperatureControlAction.ControlAction.AddressValueList = append(temperatureControlAction.ControlAction.AddressValueList,
-		targetTemperature)
+		targetTemperature,
+		data.NewAddressValue(data.TEMPERATURE_UPPER_VALUE_ADDRESS, 2200),
+		data.NewAddressValue(data.TEMPERATURE_LOWER_VALUE_ADDRESS, 0))
 	return temperatureControlAction
 }
 

@@ -39,6 +39,11 @@ func (c *Controller) AddAction(a action.Actioner) {
 		c.waitingActionChan <- triggerAction
 		c.executedActionChan <- true
 	}
+	if a.CheckType() == action.STOP {
+		triggerAction := action.NewTriggerAction(data.NewAddressValue(a.GetStatusWordAddress(), 0))
+		c.waitingActionChan <- triggerAction
+		c.executedActionChan <- true
+	}
 }
 
 func (c *Controller) Start() {

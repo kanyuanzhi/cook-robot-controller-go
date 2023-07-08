@@ -8,6 +8,7 @@ import (
 	"net"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -16,6 +17,8 @@ type TCPServer struct {
 	Port             uint16
 	Conn             net.Conn
 	RealtimeValueMap map[string]uint32
+
+	mu sync.Mutex
 }
 
 func NewTCPServer(host string, port uint16) *TCPServer {
@@ -47,7 +50,7 @@ func (t *TCPServer) Run() {
 	for {
 		select {
 		case <-ticker.C:
-			t.Read("DS0", 120)
+			t.Read("DS200", 120)
 			//logger.Log.Println(t.RealtimeValueMap[data.X_LOCATE_CONTROL_WORD_ADDRESS])
 		}
 	}
@@ -119,7 +122,6 @@ func (t *TCPServer) Write(prefixAddress string, value uint64) {
 		CMD = append(CMD, encode(valueStrHigh, 2)...)
 	}
 	//logger.Log.Println(CMD)
-
 	_, err := t.Conn.Write(CMD)
 	if err != nil {
 		logger.Log.Println(err)
@@ -205,6 +207,8 @@ func (t *TCPServer) Read(prefixAddress string, size uint64) {
 	// 处理接收到的数据
 	//data := buffer[:n]
 	var i uint64
+	t.mu.Lock()
+	defer t.mu.Unlock()
 	for i = 0; i < size; i = i + 2 {
 		value, _ := strconv.ParseInt(bufferHexStr[18+4*(i+1):18+4*(i+1)+4]+bufferHexStr[18+4*i:18+4*i+4], 16, 64)
 		//value, _ := strconv.ParseInt(string(data[9+2*i:9+2*i+2]), 16, 64)
