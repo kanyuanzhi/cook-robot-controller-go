@@ -1,9 +1,8 @@
 package main
 
 import (
-	"cook-robot-controller-go/action"
 	"cook-robot-controller-go/core"
-	"cook-robot-controller-go/data"
+	"cook-robot-controller-go/grpc"
 	"cook-robot-controller-go/modbus"
 	"cook-robot-controller-go/operator"
 	"time"
@@ -21,8 +20,8 @@ func main() {
 	controller := core.NewController(writer, reader)
 	go controller.Run()
 
-	//rpcServer := grpc.NewGRPCServer(controller)
-	//go rpcServer.Run()
+	rpcServer := grpc.NewGRPCServer(controller)
+	go rpcServer.Run()
 	//
 	//delayAction1 := action.NewDelayAction(1000)
 	//delayAction2 := action.NewDelayAction(1500)
@@ -38,25 +37,56 @@ func main() {
 	//controller.AddAction(triggerAction)
 	////controller.AddAction(delayAction2)
 	////
-	controller.AddAction(action.NewAxisResetControlAction(data.X_RESET_CONTROL_WORD_ADDRESS, data.X_RESET_STATUS_WORD_ADDRESS))
-	controller.AddAction(action.NewAxisResetControlAction(data.Y_RESET_CONTROL_WORD_ADDRESS, data.Y_RESET_STATUS_WORD_ADDRESS))
-	controller.AddAction(action.NewAxisLocateControlAction(data.Y_LOCATE_CONTROL_WORD_ADDRESS, data.Y_LOCATE_STATUS_WORD_ADDRESS,
-		data.NewAddressValue(data.Y_LOCATE_POSITION_ADDRESS, 3200), data.NewAddressValue(data.Y_LOCATE_SPEED_ADDRESS, 600)))
+	//instruction.NewResetXYInstruction().AddToController(controller)
+	//instruction.NewSeasoningInstruction(map[string]uint32{"5": 10, "9": 10}).AddToController(controller)
+	//instruction.NewResetRTInstruction().AddToController(controller)
+	//controller.AddAction(action.NewAxisResetControlAction(data.Y_RESET_CONTROL_WORD_ADDRESS, data.Y_RESET_STATUS_WORD_ADDRESS))
+	//for {
+	//	//controller.AddAction(action.NewAxisResetControlAction(data.X_RESET_CONTROL_WORD_ADDRESS, data.X_RESET_STATUS_WORD_ADDRESS))
+	//	controller.AddAction(action.NewAxisLocateControlAction(data.Y_LOCATE_CONTROL_WORD_ADDRESS, data.Y_LOCATE_STATUS_WORD_ADDRESS,
+	//		data.NewAddressValue(data.Y_LOCATE_POSITION_ADDRESS, 3500), data.NewAddressValue(data.Y_LOCATE_SPEED_ADDRESS, 600)))
+	//	controller.AddAction(action.NewAxisRotateControlAction(data.R1_ROTATE_CONTROL_WORD_ADDRESS,
+	//		data.R1_ROTATE_STATUS_WORD_ADDRESS,
+	//		data.NewAddressValue(data.R1_ROTATE_MODE_ADDRESS, 1),
+	//		data.NewAddressValue(data.R1_ROTATE_SPEED_ADDRESS, 600),
+	//		data.NewAddressValue(data.R1_ROTATE_AMOUNT_ADDRESS, 2)))
+	//	controller.AddAction(action.NewDelayAction(5000))
+	//	controller.AddAction(action.NewAxisLocateControlAction(data.Y_LOCATE_CONTROL_WORD_ADDRESS, data.Y_LOCATE_STATUS_WORD_ADDRESS,
+	//		data.NewAddressValue(data.Y_LOCATE_POSITION_ADDRESS, 3300), data.NewAddressValue(data.Y_LOCATE_SPEED_ADDRESS, 600)))
+	//	controller.AddAction(action.NewAxisRotateControlAction(data.R1_ROTATE_CONTROL_WORD_ADDRESS,
+	//		data.R1_ROTATE_STATUS_WORD_ADDRESS,
+	//		data.NewAddressValue(data.R1_ROTATE_MODE_ADDRESS, 2),
+	//		data.NewAddressValue(data.R1_ROTATE_SPEED_ADDRESS, 800),
+	//		data.NewAddressValue(data.R1_ROTATE_AMOUNT_ADDRESS, 2)))
+	//	controller.AddAction(action.NewDelayAction(5000))
+	//	controller.AddAction(action.NewAxisLocateControlAction(data.Y_LOCATE_CONTROL_WORD_ADDRESS, data.Y_LOCATE_STATUS_WORD_ADDRESS,
+	//		data.NewAddressValue(data.Y_LOCATE_POSITION_ADDRESS, 3000), data.NewAddressValue(data.Y_LOCATE_SPEED_ADDRESS, 600)))
+	//	controller.AddAction(action.NewAxisRotateControlAction(data.R1_ROTATE_CONTROL_WORD_ADDRESS,
+	//		data.R1_ROTATE_STATUS_WORD_ADDRESS,
+	//		data.NewAddressValue(data.R1_ROTATE_MODE_ADDRESS, 3),
+	//		data.NewAddressValue(data.R1_ROTATE_SPEED_ADDRESS, 1200),
+	//		data.NewAddressValue(data.R1_ROTATE_AMOUNT_ADDRESS, 3)))
+	//	controller.AddAction(action.NewDelayAction(10000))
+	//
+	//	controller.Start()
+	//	time.Sleep(5 * time.Second)
+	//}
 
-	pumpAction1 := action.NewPumpControlAction(data.PUMP_1_CONTROL_WORD_ADDRESS, data.PUMP_1_STATUS_WORD_ADDRESS,
-		data.NewAddressValue(data.PUMP_1_DURATION_ADDRESS, 2000))
-	pumpAction2 := action.NewPumpControlAction(data.PUMP_2_CONTROL_WORD_ADDRESS, data.PUMP_2_STATUS_WORD_ADDRESS,
-		data.NewAddressValue(data.PUMP_2_DURATION_ADDRESS, 4000))
-	pumpAction3 := action.NewPumpControlAction(data.PUMP_6_CONTROL_WORD_ADDRESS, data.PUMP_6_STATUS_WORD_ADDRESS,
-		data.NewAddressValue(data.PUMP_6_DURATION_ADDRESS, 6000))
-	groupAction := action.NewGroupAction()
-	groupAction.AddAction(pumpAction1)
-	groupAction.AddAction(pumpAction2)
-	groupAction.AddAction(pumpAction3)
-
-	controller.AddAction(groupAction)
-	controller.AddAction(action.NewAxisLocateControlAction(data.Y_LOCATE_CONTROL_WORD_ADDRESS, data.Y_LOCATE_STATUS_WORD_ADDRESS,
-		data.NewAddressValue(data.Y_LOCATE_POSITION_ADDRESS, 3500), data.NewAddressValue(data.Y_LOCATE_SPEED_ADDRESS, 600)))
+	//
+	//pumpAction1 := action.NewPumpControlAction(data.PUMP_1_CONTROL_WORD_ADDRESS, data.PUMP_1_STATUS_WORD_ADDRESS,
+	//	data.NewAddressValue(data.PUMP_1_DURATION_ADDRESS, 2000))
+	//pumpAction2 := action.NewPumpControlAction(data.PUMP_2_CONTROL_WORD_ADDRESS, data.PUMP_2_STATUS_WORD_ADDRESS,
+	//	data.NewAddressValue(data.PUMP_2_DURATION_ADDRESS, 4000))
+	//pumpAction3 := action.NewPumpControlAction(data.PUMP_6_CONTROL_WORD_ADDRESS, data.PUMP_6_STATUS_WORD_ADDRESS,
+	//	data.NewAddressValue(data.PUMP_6_DURATION_ADDRESS, 6000))
+	//groupAction := action.NewGroupAction()
+	//groupAction.AddAction(pumpAction1)
+	//groupAction.AddAction(pumpAction2)
+	//groupAction.AddAction(pumpAction3)
+	//
+	//controller.AddAction(groupAction)
+	//controller.AddAction(action.NewAxisLocateControlAction(data.Y_LOCATE_CONTROL_WORD_ADDRESS, data.Y_LOCATE_STATUS_WORD_ADDRESS,
+	//	data.NewAddressValue(data.Y_LOCATE_POSITION_ADDRESS, 3500), data.NewAddressValue(data.Y_LOCATE_SPEED_ADDRESS, 600)))
 
 	//controller.AddAction(action.NewAxisResetControlAction(data.X_RESET_CONTROL_WORD_ADDRESS, data.X_RESET_STATUS_WORD_ADDRESS))
 	//controller.AddAction(action.NewAxisResetControlAction(data.Y_RESET_CONTROL_WORD_ADDRESS, data.Y_RESET_STATUS_WORD_ADDRESS))
@@ -67,16 +97,17 @@ func main() {
 	//for i := 0; i < 10; i++ {
 	//	// 生成一个随机索引
 	//	xIndex := rand.Intn(len(xPositionList))
-	//	yIndex := rand.Intn(len(yPositionList))
-	//
-	//	// 根据随机索引从数组中获取数值
-	//	xPosition := xPositionList[xIndex]
-	//	yPosition := yPositionList[yIndex]
-	//	controller.AddAction(action.NewAxisLocateControlAction(data.X_LOCATE_CONTROL_WORD_ADDRESS, data.X_LOCATE_STATUS_WORD_ADDRESS,
-	//		data.NewAddressValue(data.X_LOCATE_POSITION_ADDRESS, xPosition), data.NewAddressValue(data.X_LOCATE_SPEED_ADDRESS, 20000)))
-	//	controller.AddAction(action.NewAxisLocateControlAction(data.Y_LOCATE_CONTROL_WORD_ADDRESS, data.Y_LOCATE_STATUS_WORD_ADDRESS,
-	//		data.NewAddressValue(data.Y_LOCATE_POSITION_ADDRESS, yPosition), data.NewAddressValue(data.Y_LOCATE_SPEED_ADDRESS, 600)))
+	//yIndex := rand.Intn(len(yPositionList))
+
+	// 根据随机索引从数组中获取数值
+	//xPosition := xPositionList[xIndex]
+	//yPosition := yPositionList[yIndex]
+	//controller.AddAction(action.NewAxisLocateControlAction(data.X_LOCATE_CONTROL_WORD_ADDRESS, data.X_LOCATE_STATUS_WORD_ADDRESS,
+	//	data.NewAddressValue(data.X_LOCATE_POSITION_ADDRESS, xPosition), data.NewAddressValue(data.X_LOCATE_SPEED_ADDRESS, 20000)))
+	//controller.AddAction(action.NewAxisLocateControlAction(data.Y_LOCATE_CONTROL_WORD_ADDRESS, data.Y_LOCATE_STATUS_WORD_ADDRESS,
+	//	data.NewAddressValue(data.Y_LOCATE_POSITION_ADDRESS, yPosition), data.NewAddressValue(data.Y_LOCATE_SPEED_ADDRESS, 600)))
 	//}
+
 	//controller.AddAction(action.NewAxisLocateControlAction(data.X_LOCATE_CONTROL_WORD_ADDRESS, data.X_LOCATE_STATUS_WORD_ADDRESS,
 	//	data.NewAddressValue(data.X_LOCATE_POSITION_ADDRESS, 54396), data.NewAddressValue(data.X_LOCATE_SPEED_ADDRESS, 20000)))
 	//
@@ -93,7 +124,7 @@ func main() {
 	//	data.NewAddressValue(data.R1_ROTATE_MODE_ADDRESS, 3), data.NewAddressValue(data.R1_ROTATE_SPEED_ADDRESS, 500),
 	//	data.NewAddressValue(data.R1_ROTATE_AMOUNT_ADDRESS, 5)))
 	//
-	//controller.AddAction(action.NewDelayAction(2000))
+	//controller.AddAction(action.NewDelayAction(5000))
 	//
 	//controller.AddAction(action.NewTemperatureControlAction(data.TEMPERATURE_CONTROL_WORD_ADDRESS, data.TEMPERATURE_STATUS_WORD_ADDRESS,
 	//	data.NewAddressValue(data.TEMPERATURE_ADDRESS, 150)))
@@ -157,9 +188,13 @@ func main() {
 	//controller.AddAction(controlAction4)
 	//controller.AddAction(controlAction5)
 
-	go controller.Start()
+	//go controller.Start()
 
-	for true {
+	for {
 		time.Sleep(1000 * time.Millisecond)
 	}
 }
+
+// $env:CGO_ENABLED="0"
+//  $env:GOOS="linux"
+//$env:GOARCH="arm"

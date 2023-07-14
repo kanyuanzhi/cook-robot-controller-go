@@ -35,12 +35,12 @@ func (c *Controller) AddAction(a action.Actioner) {
 	c.waitingActionChan <- a
 	c.executedActionChan <- true
 	if a.CheckType() == action.CONTROL {
-		triggerAction := action.NewTriggerAction(data.NewAddressValue(a.GetStatusWordAddress(), 100))
+		triggerAction := action.NewTriggerAction(data.NewAddressValue(a.GetStatusWordAddress(), 100), data.EQUAL_TO_TARGET)
 		c.waitingActionChan <- triggerAction
 		c.executedActionChan <- true
 	}
 	if a.CheckType() == action.STOP {
-		triggerAction := action.NewTriggerAction(data.NewAddressValue(a.GetStatusWordAddress(), 0))
+		triggerAction := action.NewTriggerAction(data.NewAddressValue(a.GetStatusWordAddress(), 0), data.EQUAL_TO_TARGET)
 		c.waitingActionChan <- triggerAction
 		c.executedActionChan <- true
 	}

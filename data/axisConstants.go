@@ -3,11 +3,11 @@ package data
 const X_MOVE_SPEED = 20000
 
 const (
-	X_READY_POSITION uint32 = iota + 1
-	X_BOX_1_POSITION
+	X_BOX_1_POSITION uint32 = iota + 1
 	X_BOX_2_POSITION
 	X_BOX_3_POSITION
 	X_BOX_4_POSITION
+	X_READY_POSITION
 )
 
 var XPositionToDistance = map[uint32]uint32{

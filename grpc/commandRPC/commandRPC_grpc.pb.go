@@ -2,9 +2,9 @@
 // versions:
 // - protoc-gen-go-grpc v1.2.0
 // - protoc             v4.23.3
-// source: commandServer.proto
+// source: commandRPC.proto
 
-package commandServer
+package commandRPC
 
 import (
 	context "context"
@@ -35,7 +35,7 @@ func NewCommandServiceClient(cc grpc.ClientConnInterface) CommandServiceClient {
 
 func (c *commandServiceClient) Execute(ctx context.Context, in *CommandRequest, opts ...grpc.CallOption) (*CommandResponse, error) {
 	out := new(CommandResponse)
-	err := c.cc.Invoke(ctx, "/commandServer.CommandService/Execute", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/commandRPC.CommandService/Execute", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -80,7 +80,7 @@ func _CommandService_Execute_Handler(srv interface{}, ctx context.Context, dec f
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/commandServer.CommandService/Execute",
+		FullMethod: "/commandRPC.CommandService/Execute",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(CommandServiceServer).Execute(ctx, req.(*CommandRequest))
@@ -92,7 +92,7 @@ func _CommandService_Execute_Handler(srv interface{}, ctx context.Context, dec f
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var CommandService_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "commandServer.CommandService",
+	ServiceName: "commandRPC.CommandService",
 	HandlerType: (*CommandServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
@@ -101,5 +101,5 @@ var CommandService_ServiceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "commandServer.proto",
+	Metadata: "commandRPC.proto",
 }

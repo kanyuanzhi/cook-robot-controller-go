@@ -18,6 +18,8 @@ type TCPServer struct {
 	Conn             net.Conn
 	RealtimeValueMap map[string]uint32
 
+	PauseReadChan chan bool
+
 	mu sync.Mutex
 }
 
@@ -26,6 +28,8 @@ func NewTCPServer(host string, port uint16) *TCPServer {
 		Host:             host,
 		Port:             port,
 		RealtimeValueMap: make(map[string]uint32),
+
+		PauseReadChan: make(chan bool),
 	}
 }
 
@@ -43,21 +47,32 @@ func (t *TCPServer) Run() {
 	t.Conn = conn
 	logger.Log.Println("建立TCP连接")
 
-	//t.Write("DD0", 20)
-	//t.Read("DS0", 120)
+	//for i := 2050; i < 2173; i += 2 {
+	//	t.Write(fmt.Sprintf("DD%d", i), 100000)
+	//}
 
-	ticker := time.NewTicker(500 * time.Millisecond)
+	//t.Write("DD0", 1)
+	//t.Write("DD2", 1)
+	//t.Read("DS2050", 120)
+
+	ticker := time.NewTicker(100 * time.Millisecond)
 	for {
 		select {
 		case <-ticker.C:
 			t.Read("DS200", 120)
-			//logger.Log.Println(t.RealtimeValueMap[data.X_LOCATE_CONTROL_WORD_ADDRESS])
+			//t.Read("DS2050", 120)
+		case <-t.PauseReadChan:
+			<-t.PauseReadChan
 		}
 	}
 	//t.Read("Dd500", 20)
 }
 
 func (t *TCPServer) Write(prefixAddress string, value uint64) {
+	t.PauseReadChan <- true
+	defer func() {
+		t.PauseReadChan <- true
+	}()
 	transmissionIdentifier := "0422"
 	protocolIdentifier := "0000" // 协议标识符
 	salveNum := "01"
@@ -206,6 +221,7 @@ func (t *TCPServer) Read(prefixAddress string, size uint64) {
 	}
 	// 处理接收到的数据
 	//data := buffer[:n]
+	//logger.Log.Println(data)
 	var i uint64
 	t.mu.Lock()
 	defer t.mu.Unlock()
@@ -216,6 +232,7 @@ func (t *TCPServer) Read(prefixAddress string, size uint64) {
 		//t.RealtimeValueMap[fmt.Sprintf("%s%d", prefix, addressNum+i)] = uint32(value)
 		//logger.Log.Printf("%s%d:%d", prefix, addressNum+i, value)
 	}
+	//logger.Log.Printf("%d", t.RealtimeValueMap[fmt.Sprintf("DD%d", 212)])
 }
 
 func encode(numStr string, length uint8) []byte {

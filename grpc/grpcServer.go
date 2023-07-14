@@ -2,7 +2,7 @@ package grpc
 
 import (
 	"cook-robot-controller-go/core"
-	pb "cook-robot-controller-go/grpc/commandServer"
+	pb "cook-robot-controller-go/grpc/commandRPC"
 	"cook-robot-controller-go/logger"
 	"google.golang.org/grpc"
 	"net"
@@ -25,7 +25,7 @@ func (g *GRPCServer) Run() {
 	}
 
 	server := grpc.NewServer()
-	pb.RegisterCommandServiceServer(server, &commandServer{controller: g.controller})
+	pb.RegisterCommandServiceServer(server, &command{controller: g.controller})
 	logger.Log.Println("gRPC服务已启动，等待客户端连接...")
 
 	if err := server.Serve(listen); err != nil {

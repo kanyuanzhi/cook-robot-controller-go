@@ -10,23 +10,25 @@ import (
 type TriggerAction struct {
 	*BaseAction
 	TriggerAddressValue *data.AddressValue // 触发地址-值
+	triggerType         data.TriggerType
 }
 
-func NewTriggerAction(triggerAddressValue *data.AddressValue) *TriggerAction {
+func NewTriggerAction(triggerAddressValue *data.AddressValue, triggerType data.TriggerType) *TriggerAction {
 	return &TriggerAction{
 		BaseAction:          newBaseAction(TRIGGER),
 		TriggerAddressValue: triggerAddressValue,
+		triggerType:         triggerType,
 	}
 }
 
 func (t *TriggerAction) Execute(writer *operator.Writer, reader *operator.Reader) {
-	time.Sleep(60 * time.Millisecond) // 延时50ms执行trig，确保状态字重置
-	ticker := time.NewTicker(50 * time.Millisecond)
+	time.Sleep(200 * time.Millisecond) // 延时200ms执行trig，确保状态字重置
+	ticker := time.NewTicker(100 * time.Millisecond)
 	defer ticker.Stop()
 	for {
 		select {
 		case <-ticker.C:
-			if reader.Trig(t.TriggerAddressValue.Address, t.TriggerAddressValue.Value) {
+			if reader.Trig(t.TriggerAddressValue.Address, t.TriggerAddressValue.Value, t.triggerType) {
 				return
 			}
 		}

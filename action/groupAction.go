@@ -10,20 +10,20 @@ import (
 
 type GroupAction struct {
 	*BaseAction
-	actions []Actioner
+	Actions []Actioner
 	wg      *sync.WaitGroup
 }
 
 func NewGroupAction() *GroupAction {
 	return &GroupAction{
 		BaseAction: newBaseAction(GROUP),
-		actions:    []Actioner{},
+		Actions:    []Actioner{},
 		wg:         new(sync.WaitGroup),
 	}
 }
 
 func (g *GroupAction) AddAction(actioner Actioner) {
-	g.actions = append(g.actions, actioner)
+	g.Actions = append(g.Actions, actioner)
 }
 
 func (g *GroupAction) CheckType() ActionType {
@@ -31,15 +31,18 @@ func (g *GroupAction) CheckType() ActionType {
 }
 
 func (g *GroupAction) Execute(writer *operator.Writer, reader *operator.Reader) {
-	g.wg.Add(len(g.actions))
+	if len(g.Actions) == 0 {
+		return
+	}
+	g.wg.Add(len(g.Actions))
 
-	for _, action := range g.actions {
+	for _, action := range g.Actions {
 		go func(action Actioner) {
 			defer g.wg.Done()
 			logger.Log.Println(action.BeforeExecuteInfo())
 			action.Execute(writer, reader)
 			if action.CheckType() == CONTROL {
-				triggerAction := NewTriggerAction(data.NewAddressValue(action.GetStatusWordAddress(), 100))
+				triggerAction := NewTriggerAction(data.NewAddressValue(action.GetStatusWordAddress(), 100), data.EQUAL_TO_TARGET)
 				triggerAction.Execute(writer, reader)
 				logger.Log.Println(triggerAction.AfterExecuteInfo())
 			}
@@ -51,9 +54,9 @@ func (g *GroupAction) Execute(writer *operator.Writer, reader *operator.Reader) 
 }
 
 func (g *GroupAction) BeforeExecuteInfo() string {
-	return fmt.Sprintf("[开始]同步执行%d个动作", len(g.actions))
+	return fmt.Sprintf("[开始]同步执行%d个动作", len(g.Actions))
 }
 
 func (g *GroupAction) AfterExecuteInfo() string {
-	return fmt.Sprintf("[结束]同步执行%d个动作", len(g.actions))
+	return fmt.Sprintf("[结束]同步执行%d个动作", len(g.Actions))
 }

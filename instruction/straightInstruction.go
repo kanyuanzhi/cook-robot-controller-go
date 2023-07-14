@@ -97,11 +97,11 @@ func (r RotateInstruction) AddToController(controller *core.Controller) {
 
 type PumpInstruction struct {
 	Instruction `mapstructure:",squash"`
-	PumpNumber  uint8  `json:"pump_number" mapstructure:"pump_number"`
+	PumpNumber  uint32 `json:"pump_number" mapstructure:"pump_number"`
 	Duration    uint32 `json:"duration"`
 }
 
-func NewPumpInstruction(pumpNumber uint8, duration uint32) *PumpInstruction {
+func NewPumpInstruction(pumpNumber uint32, duration uint32) *PumpInstruction {
 	return &PumpInstruction{
 		Instruction: NewInstruction(PUMP),
 		PumpNumber:  pumpNumber,
