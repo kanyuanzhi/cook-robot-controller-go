@@ -22,7 +22,9 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type CommandServiceClient interface {
-	Execute(ctx context.Context, in *CommandRequest, opts ...grpc.CallOption) (*CommandResponse, error)
+	Execute(ctx context.Context, in *MultipleCommandRequest, opts ...grpc.CallOption) (*CommandResponse, error)
+	Run(ctx context.Context, in *SingleCommandRequest, opts ...grpc.CallOption) (*CommandResponse, error)
+	Fill(ctx context.Context, in *MultipleCommandRequest, opts ...grpc.CallOption) (*CommandResponse, error)
 }
 
 type commandServiceClient struct {
@@ -33,9 +35,27 @@ func NewCommandServiceClient(cc grpc.ClientConnInterface) CommandServiceClient {
 	return &commandServiceClient{cc}
 }
 
-func (c *commandServiceClient) Execute(ctx context.Context, in *CommandRequest, opts ...grpc.CallOption) (*CommandResponse, error) {
+func (c *commandServiceClient) Execute(ctx context.Context, in *MultipleCommandRequest, opts ...grpc.CallOption) (*CommandResponse, error) {
 	out := new(CommandResponse)
 	err := c.cc.Invoke(ctx, "/commandRPC.CommandService/Execute", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *commandServiceClient) Run(ctx context.Context, in *SingleCommandRequest, opts ...grpc.CallOption) (*CommandResponse, error) {
+	out := new(CommandResponse)
+	err := c.cc.Invoke(ctx, "/commandRPC.CommandService/Run", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *commandServiceClient) Fill(ctx context.Context, in *MultipleCommandRequest, opts ...grpc.CallOption) (*CommandResponse, error) {
+	out := new(CommandResponse)
+	err := c.cc.Invoke(ctx, "/commandRPC.CommandService/Fill", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -46,7 +66,9 @@ func (c *commandServiceClient) Execute(ctx context.Context, in *CommandRequest, 
 // All implementations must embed UnimplementedCommandServiceServer
 // for forward compatibility
 type CommandServiceServer interface {
-	Execute(context.Context, *CommandRequest) (*CommandResponse, error)
+	Execute(context.Context, *MultipleCommandRequest) (*CommandResponse, error)
+	Run(context.Context, *SingleCommandRequest) (*CommandResponse, error)
+	Fill(context.Context, *MultipleCommandRequest) (*CommandResponse, error)
 	mustEmbedUnimplementedCommandServiceServer()
 }
 
@@ -54,8 +76,14 @@ type CommandServiceServer interface {
 type UnimplementedCommandServiceServer struct {
 }
 
-func (UnimplementedCommandServiceServer) Execute(context.Context, *CommandRequest) (*CommandResponse, error) {
+func (UnimplementedCommandServiceServer) Execute(context.Context, *MultipleCommandRequest) (*CommandResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Execute not implemented")
+}
+func (UnimplementedCommandServiceServer) Run(context.Context, *SingleCommandRequest) (*CommandResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Run not implemented")
+}
+func (UnimplementedCommandServiceServer) Fill(context.Context, *MultipleCommandRequest) (*CommandResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Fill not implemented")
 }
 func (UnimplementedCommandServiceServer) mustEmbedUnimplementedCommandServiceServer() {}
 
@@ -71,7 +99,7 @@ func RegisterCommandServiceServer(s grpc.ServiceRegistrar, srv CommandServiceSer
 }
 
 func _CommandService_Execute_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(CommandRequest)
+	in := new(MultipleCommandRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -83,7 +111,43 @@ func _CommandService_Execute_Handler(srv interface{}, ctx context.Context, dec f
 		FullMethod: "/commandRPC.CommandService/Execute",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(CommandServiceServer).Execute(ctx, req.(*CommandRequest))
+		return srv.(CommandServiceServer).Execute(ctx, req.(*MultipleCommandRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _CommandService_Run_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SingleCommandRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CommandServiceServer).Run(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/commandRPC.CommandService/Run",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CommandServiceServer).Run(ctx, req.(*SingleCommandRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _CommandService_Fill_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MultipleCommandRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CommandServiceServer).Fill(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/commandRPC.CommandService/Fill",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CommandServiceServer).Fill(ctx, req.(*MultipleCommandRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -98,6 +162,14 @@ var CommandService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Execute",
 			Handler:    _CommandService_Execute_Handler,
+		},
+		{
+			MethodName: "Run",
+			Handler:    _CommandService_Run_Handler,
+		},
+		{
+			MethodName: "Fill",
+			Handler:    _CommandService_Fill_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

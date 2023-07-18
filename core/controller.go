@@ -35,7 +35,7 @@ func (c *Controller) AddAction(a action.Actioner) {
 	c.waitingActionChan <- a
 	c.executedActionChan <- true
 	if a.CheckType() == action.CONTROL {
-		triggerAction := action.NewTriggerAction(data.NewAddressValue(a.GetStatusWordAddress(), 100), data.EQUAL_TO_TARGET)
+		triggerAction := action.NewTriggerAction(data.NewAddressValue(a.GetStatusWordAddress(), 100), data.EQUAL_TO_TARGET) // 100
 		c.waitingActionChan <- triggerAction
 		c.executedActionChan <- true
 	}

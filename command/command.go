@@ -10,6 +10,6 @@ const (
 )
 
 type Command struct {
-	CommandType  CommandType                 `json:"command_type"`
+	CommandType  CommandType                 `json:"commandType"`
 	Instructions []instruction.Instructioner `json:"instructions"`
 }

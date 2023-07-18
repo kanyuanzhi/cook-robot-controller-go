@@ -12,7 +12,7 @@ func main() {
 	//tcpServer := modbus.NewTCPServer("192.168.6.6", 502)
 	tcpServer := modbus.NewTCPServer("192.168.6.6", 502)
 	//tcpServer := modbus.NewTCPServer("127.0.0.1", 502)
-	go tcpServer.Run()
+	//go tcpServer.Run()
 
 	//
 	writer := operator.NewWriter(tcpServer)

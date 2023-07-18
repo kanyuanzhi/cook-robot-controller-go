@@ -5,11 +5,17 @@ option go_package = "/commandRPC";
 package commandRPC;
 
 service CommandService {
-  rpc Execute(CommandRequest) returns (CommandResponse) {}
+  rpc Execute(MultipleCommandRequest) returns (CommandResponse) {}
+  rpc Run(SingleCommandRequest) returns (CommandResponse) {}
+  rpc Fill(MultipleCommandRequest) returns (CommandResponse) {}
 }
 
-message CommandRequest {
+message MultipleCommandRequest {
   string command_json = 1;
+}
+
+message SingleCommandRequest {
+  bool empty = 1;
 }
 
 message CommandResponse {
