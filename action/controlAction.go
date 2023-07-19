@@ -23,7 +23,10 @@ func NewControlAction(controlWordAddress string, statusWordAddress string) *Cont
 	}
 }
 
-func (c *ControlAction) Execute(writer *operator.Writer, reader *operator.Reader) {
+func (c *ControlAction) Execute(writer *operator.Writer, reader *operator.Reader, debugMode bool) {
+	if debugMode {
+		return
+	}
 	successChan := make(chan bool)
 	defer close(successChan)
 	go writer.Send(successChan, c.AddressValueList)

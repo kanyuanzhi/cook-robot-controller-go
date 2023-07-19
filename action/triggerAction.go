@@ -21,7 +21,11 @@ func NewTriggerAction(triggerAddressValue *data.AddressValue, triggerType data.T
 	}
 }
 
-func (t *TriggerAction) Execute(writer *operator.Writer, reader *operator.Reader) {
+func (t *TriggerAction) Execute(writer *operator.Writer, reader *operator.Reader, debugMode bool) {
+	if debugMode {
+		time.Sleep(1 * time.Second)
+		return
+	}
 	time.Sleep(200 * time.Millisecond) // 延时200ms执行trig，确保状态字重置
 	ticker := time.NewTicker(100 * time.Millisecond)
 	defer ticker.Stop()

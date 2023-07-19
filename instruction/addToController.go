@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"math"
 	"strconv"
+	"strings"
 )
 
 func (i Instruction) AddToController(controller *core.Controller) {
@@ -241,7 +242,7 @@ func (r ResetAllInstruction) AddToController(controller *core.Controller) {
 		data.Y_RESET_STATUS_WORD_ADDRESS)
 	axisYLocateControlAction := action.NewAxisLocateControlAction(data.Y_LOCATE_CONTROL_WORD_ADDRESS,
 		data.Y_LOCATE_STATUS_WORD_ADDRESS,
-		data.NewAddressValue(data.Y_LOCATE_POSITION_ADDRESS, data.YPositionToDistance[data.Y_STIR_FRY_2_POSITION]),
+		data.NewAddressValue(data.Y_LOCATE_POSITION_ADDRESS, data.YPositionToDistance[data.Y_STIR_FRY_3_POSITION]),
 		data.NewAddressValue(data.Y_LOCATE_SPEED_ADDRESS, data.Y_MOVE_SPEED))
 
 	//controller.AddAction(temperatureResetAction)
@@ -263,7 +264,7 @@ func (r ResetXYInstruction) AddToController(controller *core.Controller) {
 		data.Y_RESET_STATUS_WORD_ADDRESS)
 	axisYLocateControlAction := action.NewAxisLocateControlAction(data.Y_LOCATE_CONTROL_WORD_ADDRESS,
 		data.Y_LOCATE_STATUS_WORD_ADDRESS,
-		data.NewAddressValue(data.Y_LOCATE_POSITION_ADDRESS, data.YPositionToDistance[data.Y_STIR_FRY_2_POSITION]),
+		data.NewAddressValue(data.Y_LOCATE_POSITION_ADDRESS, data.YPositionToDistance[data.Y_STIR_FRY_3_POSITION]),
 		data.NewAddressValue(data.Y_LOCATE_SPEED_ADDRESS, data.Y_MOVE_SPEED))
 
 	controller.AddAction(axisXResetControlAction)
@@ -277,7 +278,7 @@ func (r ResetRTInstruction) AddToController(controller *core.Controller) {
 	temperatureResetAction := action.NewTemperatureControlAction(data.TEMPERATURE_CONTROL_WORD_ADDRESS,
 		data.TEMPERATURE_STATUS_WORD_ADDRESS,
 		data.NewAddressValue(data.TEMPERATURE_ADDRESS, 0))
-	axleRotateControlAction := action.NewAxisRotateControlAction(data.R1_ROTATE_CONTROL_WORD_ADDRESS,
+	axisRotateControlAction := action.NewAxisRotateControlAction(data.R1_ROTATE_CONTROL_WORD_ADDRESS,
 		data.R1_ROTATE_STATUS_WORD_ADDRESS,
 		data.NewAddressValue(data.R1_ROTATE_MODE_ADDRESS, 1),
 		data.NewAddressValue(data.R1_ROTATE_SPEED_ADDRESS, 100),
@@ -287,8 +288,64 @@ func (r ResetRTInstruction) AddToController(controller *core.Controller) {
 		data.R1_ROTATE_STATUS_WORD_ADDRESS)
 
 	controller.AddAction(temperatureResetAction)
-	controller.AddAction(axleRotateControlAction)
+	controller.AddAction(axisRotateControlAction)
 	controller.AddAction(delayAction)
 	controller.AddAction(axisR1StopAction)
 	logger.Log.Printf("[步骤]添加转动、温控停止")
+}
+
+func (d DelayInstruction) AddToController(controller *core.Controller) {
+	delayAction := action.NewDelayAction(d.Duration)
+	controller.AddAction(delayAction)
+	logger.Log.Printf("[步骤]延时%d秒")
+}
+
+// straight instruction
+
+func (a AxisInstruction) AddToController(controller *core.Controller) {
+	if a.Function != RESET && a.Function != LOCATE {
+		logger.Log.Println("wrong axis function")
+		return
+	}
+	a.Axis = strings.ToUpper(a.Axis)
+	if a.Axis != "X" && a.Axis != "Y" && a.Axis != "Z" && a.Axis != "R1" && a.Axis != "R2" {
+		logger.Log.Println("wrong axis")
+		return
+	}
+	var axisControlAction action.Actioner
+	if a.Function == RESET { // 复位
+		axisControlAction = action.NewAxisResetControlAction(data.AxisToResetControlWordAddress[a.Axis],
+			data.AxisToResetStatusWordAddress[a.Axis])
+	} else { // 定位
+		axisControlAction = action.NewAxisLocateControlAction(data.AxisToLocateControlWordAddress[a.Axis],
+			data.AxisToLocateStatusWordAddress[a.Axis],
+			data.NewAddressValue(data.AxisToLocatePositionAddress[a.Axis], a.TargetPosition),
+			data.NewAddressValue(data.AxisToLocateSpeedAddress[a.Axis], a.Speed))
+	}
+	controller.AddAction(axisControlAction)
+}
+
+func (r RotateInstruction) AddToController(controller *core.Controller) {
+	if r.Function != STOP && r.Function != START {
+		logger.Log.Println("wrong ratate function")
+		return
+	}
+	var rotateControlAction action.Actioner
+	if r.Function == STOP { // 停转
+		rotateControlAction = action.NewStopAction(data.R1_ROTATE_CONTROL_WORD_ADDRESS,
+			data.R1_ROTATE_STATUS_WORD_ADDRESS)
+	} else { // 定位
+		rotateControlAction = action.NewAxisRotateControlAction(data.R1_ROTATE_CONTROL_WORD_ADDRESS,
+			data.R1_ROTATE_STATUS_WORD_ADDRESS,
+			data.NewAddressValue(data.R1_ROTATE_MODE_ADDRESS, r.Mode),
+			data.NewAddressValue(data.R1_ROTATE_SPEED_ADDRESS, r.Speed),
+			data.NewAddressValue(data.R1_ROTATE_AMOUNT_ADDRESS, r.RotationalAmount))
+	}
+	controller.AddAction(rotateControlAction)
+	if r.Function == STOP {
+		logger.Log.Printf("[步骤]添加R轴停转")
+	} else {
+		logger.Log.Printf("[步骤]添加R轴%s，速度%d，正反转圈数%d", data.RotateModeToString[r.Mode], r.Speed, r.RotationalAmount)
+	}
+
 }

@@ -6,9 +6,11 @@ import (
 
 type Actioner interface {
 	CheckType() ActionType
-	Execute(writer *operator.Writer, reader *operator.Reader)
+	Execute(writer *operator.Writer, reader *operator.Reader, debugMode bool)
 
 	GetStatusWordAddress() string
+	Pause()
+	Resume()
 
 	BeforeExecuteInfo() string
 	AfterExecuteInfo() string
@@ -38,12 +40,20 @@ func (b *BaseAction) CheckType() ActionType {
 	return b.ActionType
 }
 
-func (b *BaseAction) Execute(writer *operator.Writer, reader *operator.Reader) {
+func (b *BaseAction) Execute(writer *operator.Writer, reader *operator.Reader, debugMode bool) {
 	return
 }
 
 func (b *BaseAction) GetStatusWordAddress() string {
 	return ""
+}
+
+func (b *BaseAction) Pause() {
+	return
+}
+
+func (b *BaseAction) Resume() {
+	return
 }
 
 func (b *BaseAction) BeforeExecuteInfo() string {

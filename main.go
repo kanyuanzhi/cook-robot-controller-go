@@ -17,7 +17,7 @@ func main() {
 	//
 	writer := operator.NewWriter(tcpServer)
 	reader := operator.NewReader(tcpServer)
-	controller := core.NewController(writer, reader)
+	controller := core.NewController(writer, reader, true)
 	go controller.Run()
 
 	rpcServer := grpc.NewGRPCServer(controller)

@@ -7,6 +7,7 @@ import (
 type Instructioner interface {
 	CheckType() InstructionType
 	AddToController(controller *core.Controller)
+	ExecuteImmediately(controller *core.Controller)
 }
 
 type InstructionType string
@@ -25,6 +26,9 @@ const (
 	RESET_ALL        = InstructionType("reset_all")
 	RESET_XY         = InstructionType("reset_xy")
 	RESET_RT         = InstructionType("reset_rt")
+	DELAY            = InstructionType("delay")
+	RESUME           = InstructionType("resume")
+	PAUSE_TO_ADD     = InstructionType("pause_to_add")
 
 	AXIS   = InstructionType("axis")
 	ROTATE = InstructionType("rotate")
@@ -37,6 +41,10 @@ type Instruction struct {
 
 func (i Instruction) CheckType() InstructionType {
 	return i.InstructionType
+}
+
+func (i Instruction) ExecuteImmediately(controller *core.Controller) {
+	return
 }
 
 func NewInstruction(instructionType InstructionType) Instruction {
@@ -211,6 +219,38 @@ func NewResetRTInstruction() *ResetRTInstruction {
 	}
 }
 
+type DelayInstruction struct {
+	Instruction `mapstructure:",squash"`
+	Duration    uint32 `json:"duration"`
+}
+
+func NewDelayInstruction(duration uint32) *DelayInstruction {
+	return &DelayInstruction{
+		Instruction: NewInstruction(DELAY),
+		Duration:    duration,
+	}
+}
+
+type RestartInstruction struct {
+	Instruction `mapstructure:",squash"`
+}
+
+func NewRestartInstruction() *RestartInstruction {
+	return &RestartInstruction{
+		Instruction: NewInstruction(RESUME),
+	}
+}
+
+type PauseToAddInstruction struct {
+	Instruction `mapstructure:",squash"`
+}
+
+func NewPauseToAddInstruction() *PauseToAddInstruction {
+	return &PauseToAddInstruction{
+		Instruction: NewInstruction(PAUSE_TO_ADD),
+	}
+}
+
 var InstructionTypeToStruct = map[InstructionType]Instructioner{
 	INGREDIENT:       IngredientInstruction{},
 	SEASONING:        SeasoningInstruction{},
@@ -225,6 +265,9 @@ var InstructionTypeToStruct = map[InstructionType]Instructioner{
 	RESET_ALL:        ResetAllInstruction{},
 	RESET_XY:         ResetXYInstruction{},
 	RESET_RT:         ResetRTInstruction{},
+	DELAY:            DelayInstruction{},
+	RESUME:           RestartInstruction{},
+	PAUSE_TO_ADD:     PauseToAddInstruction{},
 
 	AXIS:   AxisInstruction{},
 	ROTATE: RotateInstruction{},

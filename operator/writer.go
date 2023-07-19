@@ -22,6 +22,6 @@ func (w *Writer) Send(successChan chan bool, addressValueList []*data.AddressVal
 	for _, addressValue := range addressValueList[1:] {
 		w.tcpServer.Write(addressValue.Address, uint64(addressValue.Value))
 	}
-	w.tcpServer.Write(addressValueList[0].Address, uint64(addressValueList[0].Value))
+	w.tcpServer.Write(addressValueList[0].Address, uint64(addressValueList[0].Value)) // 最后发送控制字
 	successChan <- true
 }

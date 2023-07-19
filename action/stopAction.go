@@ -29,7 +29,10 @@ func NewStopAction(controlWordAddress string, statusWordAddress string) *StopAct
 	}
 }
 
-func (s *StopAction) Execute(writer *operator.Writer, reader *operator.Reader) {
+func (s *StopAction) Execute(writer *operator.Writer, reader *operator.Reader, debugMode bool) {
+	if debugMode {
+		return
+	}
 	successChan := make(chan bool)
 	defer close(successChan)
 	go writer.Send(successChan, s.AddressValueList)

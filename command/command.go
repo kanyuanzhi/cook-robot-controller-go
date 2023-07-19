@@ -2,14 +2,23 @@ package command
 
 import "cook-robot-controller-go/instruction"
 
-type CommandType string
+const (
+	COOK         = "cook"         // multiple
+	WASH         = "wash"         // multiple
+	RESET        = "reset"        // multiple
+	UNLOCK       = "unlock"       // single
+	DISH_OUT     = "dish_out"     // multiple
+	RESUME       = "resume"       // single
+	PAUSE_TO_ADD = "pause_to_add" // single
+)
 
 const (
-	Single   = CommandType("single")
-	Multiple = CommandType("multiple")
+	MULTIPLE = "multiple"
+	SINGLE   = "single"
 )
 
 type Command struct {
-	CommandType  CommandType                 `json:"commandType"`
+	CommandType  string                      `json:"commandType"`
+	CommandName  string                      `json:"commandName"`
 	Instructions []instruction.Instructioner `json:"instructions"`
 }
