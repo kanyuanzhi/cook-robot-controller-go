@@ -24,8 +24,9 @@ const (
 	LAMPBLACK_PURIFY = InstructionType("lampblack_purify")
 	DOOR_UNLOCK      = InstructionType("door_unlock")
 	RESET_ALL        = InstructionType("reset_all")
-	RESET_XY         = InstructionType("reset_xy")
+	RESET_XYT        = InstructionType("reset_xyt")
 	RESET_RT         = InstructionType("reset_rt")
+	PREPARE          = InstructionType("prepare")
 	DELAY            = InstructionType("delay")
 	RESUME           = InstructionType("resume")
 	PAUSE_TO_ADD     = InstructionType("pause_to_add")
@@ -199,13 +200,13 @@ func NewResetAllInstruction() *ResetAllInstruction {
 	}
 }
 
-type ResetXYInstruction struct {
+type ResetXYTInstruction struct {
 	Instruction `mapstructure:",squash"`
 }
 
-func NewResetXYInstruction() *ResetXYInstruction {
-	return &ResetXYInstruction{
-		Instruction: NewInstruction(RESET_XY),
+func NewResetXYTInstruction() *ResetXYTInstruction {
+	return &ResetXYTInstruction{
+		Instruction: NewInstruction(RESET_XYT),
 	}
 }
 
@@ -216,6 +217,16 @@ type ResetRTInstruction struct {
 func NewResetRTInstruction() *ResetRTInstruction {
 	return &ResetRTInstruction{
 		Instruction: NewInstruction(RESET_RT),
+	}
+}
+
+type PrepareInstruction struct {
+	Instruction `mapstructure:",squash"`
+}
+
+func NewPrepareInstruction() *PrepareInstruction {
+	return &PrepareInstruction{
+		Instruction: NewInstruction(PREPARE),
 	}
 }
 
@@ -231,12 +242,12 @@ func NewDelayInstruction(duration uint32) *DelayInstruction {
 	}
 }
 
-type RestartInstruction struct {
+type ResumeInstruction struct {
 	Instruction `mapstructure:",squash"`
 }
 
-func NewRestartInstruction() *RestartInstruction {
-	return &RestartInstruction{
+func NewResumeInstruction() *ResumeInstruction {
+	return &ResumeInstruction{
 		Instruction: NewInstruction(RESUME),
 	}
 }
@@ -263,10 +274,11 @@ var InstructionTypeToStruct = map[InstructionType]Instructioner{
 	LAMPBLACK_PURIFY: LampblackPurifyInstruction{},
 	DOOR_UNLOCK:      DoorUnlockInstruction{},
 	RESET_ALL:        ResetAllInstruction{},
-	RESET_XY:         ResetXYInstruction{},
+	RESET_XYT:        ResetXYTInstruction{},
 	RESET_RT:         ResetRTInstruction{},
+	PREPARE:          PrepareInstruction{},
 	DELAY:            DelayInstruction{},
-	RESUME:           RestartInstruction{},
+	RESUME:           ResumeInstruction{},
 	PAUSE_TO_ADD:     PauseToAddInstruction{},
 
 	AXIS:   AxisInstruction{},

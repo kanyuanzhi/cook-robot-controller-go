@@ -192,12 +192,13 @@ func (d DishOutInstruction) AddToController(controller *core.Controller) {
 	dishOutControlAction := action.NewDishOutControlAction(data.DISH_OUT_CONTROL_WORD_ADDRESS,
 		data.DISH_OUT_STATUS_WORD_ADDRESS,
 		data.NewAddressValue(data.DISH_OUT_AMOUNT_ADDRESS, 3),
-		data.NewAddressValue(data.DISH_OUT_UPWARD_SPEED_ADDRESS, 400),
-		data.NewAddressValue(data.DISH_OUT_DOWNWARD_SPEED_ADDRESS, 800),
-		data.NewAddressValue(data.DISH_OUT_UPWARD_POSITION_ADDRESS, 2000),
-		data.NewAddressValue(data.DISH_OUT_DOWNWARD_POSITION_ADDRESS, 4000))
+		data.NewAddressValue(data.DISH_OUT_UPWARD_SPEED_ADDRESS, 600),
+		data.NewAddressValue(data.DISH_OUT_DOWNWARD_SPEED_ADDRESS, 2200),
+		data.NewAddressValue(data.DISH_OUT_UPWARD_POSITION_ADDRESS, data.YPositionToDistance[data.Y_DISH_OUT_HEIGH_POSITION]),
+		data.NewAddressValue(data.DISH_OUT_DOWNWARD_POSITION_ADDRESS, data.YPositionToDistance[data.Y_DISH_OUT_LOW_POSITION]))
 	controller.AddAction(dishOutControlAction)
-	logger.Log.Printf("[步骤]添加出菜，次数%d，上行速度%d，下行速度%d，上行位置%d，下行位置%d", 3, 400, 800, 2000, 4000)
+	logger.Log.Printf("[步骤]添加出菜，次数%d，上行速度%d，下行速度%d，上行位置%d，下行位置%d", 3, 400, 800,
+		data.YPositionToDistance[data.Y_DISH_OUT_HEIGH_POSITION], data.YPositionToDistance[data.Y_DISH_OUT_LOW_POSITION])
 }
 
 func (s ShakeInstruction) AddToController(controller *core.Controller) {
@@ -253,25 +254,19 @@ func (r ResetAllInstruction) AddToController(controller *core.Controller) {
 	controller.AddAction(axisYLocateControlAction)
 }
 
-func (r ResetXYInstruction) AddToController(controller *core.Controller) {
+func (r ResetXYTInstruction) AddToController(controller *core.Controller) {
+	temperatureResetAction := action.NewTemperatureControlAction(data.TEMPERATURE_CONTROL_WORD_ADDRESS,
+		data.TEMPERATURE_STATUS_WORD_ADDRESS,
+		data.NewAddressValue(data.TEMPERATURE_ADDRESS, 0))
 	axisXResetControlAction := action.NewAxisResetControlAction(data.X_RESET_CONTROL_WORD_ADDRESS,
 		data.X_RESET_STATUS_WORD_ADDRESS)
-	axisXLocateControlAction := action.NewAxisLocateControlAction(data.X_LOCATE_CONTROL_WORD_ADDRESS,
-		data.X_LOCATE_STATUS_WORD_ADDRESS,
-		data.NewAddressValue(data.X_LOCATE_POSITION_ADDRESS, data.XPositionToDistance[data.X_READY_POSITION]),
-		data.NewAddressValue(data.X_LOCATE_SPEED_ADDRESS, data.X_MOVE_SPEED))
 	axisYResetControlAction := action.NewAxisResetControlAction(data.Y_RESET_CONTROL_WORD_ADDRESS,
 		data.Y_RESET_STATUS_WORD_ADDRESS)
-	axisYLocateControlAction := action.NewAxisLocateControlAction(data.Y_LOCATE_CONTROL_WORD_ADDRESS,
-		data.Y_LOCATE_STATUS_WORD_ADDRESS,
-		data.NewAddressValue(data.Y_LOCATE_POSITION_ADDRESS, data.YPositionToDistance[data.Y_STIR_FRY_3_POSITION]),
-		data.NewAddressValue(data.Y_LOCATE_SPEED_ADDRESS, data.Y_MOVE_SPEED))
 
+	controller.AddAction(temperatureResetAction)
 	controller.AddAction(axisXResetControlAction)
-	controller.AddAction(axisXLocateControlAction)
 	controller.AddAction(axisYResetControlAction)
-	controller.AddAction(axisYLocateControlAction)
-	logger.Log.Printf("[步骤]添加X轴、Y轴复位")
+	logger.Log.Printf("[步骤]添加X轴、Y轴复位，温控停止")
 }
 
 func (r ResetRTInstruction) AddToController(controller *core.Controller) {
@@ -292,6 +287,21 @@ func (r ResetRTInstruction) AddToController(controller *core.Controller) {
 	controller.AddAction(delayAction)
 	controller.AddAction(axisR1StopAction)
 	logger.Log.Printf("[步骤]添加转动、温控停止")
+}
+
+func (p PrepareInstruction) AddToController(controller *core.Controller) {
+	axisXLocateControlAction := action.NewAxisLocateControlAction(data.X_LOCATE_CONTROL_WORD_ADDRESS,
+		data.X_LOCATE_STATUS_WORD_ADDRESS,
+		data.NewAddressValue(data.X_LOCATE_POSITION_ADDRESS, data.XPositionToDistance[data.X_READY_POSITION]),
+		data.NewAddressValue(data.X_LOCATE_SPEED_ADDRESS, data.X_MOVE_SPEED))
+	axisYLocateControlAction := action.NewAxisLocateControlAction(data.Y_LOCATE_CONTROL_WORD_ADDRESS,
+		data.Y_LOCATE_STATUS_WORD_ADDRESS,
+		data.NewAddressValue(data.Y_LOCATE_POSITION_ADDRESS, data.YPositionToDistance[data.Y_STIR_FRY_3_POSITION]),
+		data.NewAddressValue(data.Y_LOCATE_SPEED_ADDRESS, data.Y_MOVE_SPEED))
+
+	controller.AddAction(axisXLocateControlAction)
+	controller.AddAction(axisYLocateControlAction)
+	logger.Log.Printf("[步骤]添加X轴、Y轴定位到备菜位")
 }
 
 func (d DelayInstruction) AddToController(controller *core.Controller) {

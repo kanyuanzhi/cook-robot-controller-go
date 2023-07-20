@@ -26,7 +26,7 @@ func (g *GRPCServer) Run() {
 
 	server := grpc.NewServer()
 	pb.RegisterCommandServiceServer(server, &command{controller: g.controller})
-	logger.Log.Println("gRPC服务已启动，等待客户端连接...")
+	logger.Log.Println("gRPC服务启动")
 
 	if err := server.Serve(listen); err != nil {
 		logger.Log.Fatalf("无法启动gRPC服务: %v", err)

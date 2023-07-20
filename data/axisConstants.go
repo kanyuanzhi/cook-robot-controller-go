@@ -36,11 +36,11 @@ const (
 var YPositionToDistance = map[uint32]uint32{
 	Y_INGREDIENT_POSITION:       2000, // 接菜位
 	Y_LIQUID_SEASONING_POSITION: 3200, // 接液体料位
-	Y_SOLID_SEASONING_POSITION:  3201, // 接固体料位
-	Y_STIR_FRY_1_POSITION:       3485, // 炒菜1位
+	Y_SOLID_SEASONING_POSITION:  3485, // 接固体料位
+	Y_STIR_FRY_1_POSITION:       3500, // 炒菜1位
 	Y_STIR_FRY_2_POSITION:       3500, // 炒菜2位
-	Y_STIR_FRY_3_POSITION:       3510, // 炒菜3位
-	Y_WASH_POSITION:             1759, // 洗锅位
+	Y_STIR_FRY_3_POSITION:       3500, // 炒菜3位
+	Y_WASH_POSITION:             3400, // 洗锅位
 	Y_POUR_POSITION:             10,   // 倒位水
 	Y_DISH_OUT_HEIGH_POSITION:   4200, // 出菜高位
 	Y_DISH_OUT_LOW_POSITION:     4700, // 出菜低位

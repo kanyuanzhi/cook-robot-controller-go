@@ -30,7 +30,7 @@ func (g *GroupAction) CheckType() ActionType {
 	return g.ActionType
 }
 
-func (g *GroupAction) Execute(writer *operator.Writer, reader *operator.Reader) {
+func (g *GroupAction) Execute(writer *operator.Writer, reader *operator.Reader, debugMode bool) {
 	if len(g.Actions) == 0 {
 		return
 	}
@@ -40,10 +40,10 @@ func (g *GroupAction) Execute(writer *operator.Writer, reader *operator.Reader) 
 		go func(action Actioner) {
 			defer g.wg.Done()
 			logger.Log.Println(action.BeforeExecuteInfo())
-			action.Execute(writer, reader)
+			action.Execute(writer, reader, debugMode)
 			if action.CheckType() == CONTROL {
 				triggerAction := NewTriggerAction(data.NewAddressValue(action.GetStatusWordAddress(), 100), data.EQUAL_TO_TARGET)
-				triggerAction.Execute(writer, reader)
+				triggerAction.Execute(writer, reader, debugMode)
 				logger.Log.Println(triggerAction.AfterExecuteInfo())
 			}
 		}(action)

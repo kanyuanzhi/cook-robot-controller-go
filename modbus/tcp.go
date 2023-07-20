@@ -21,21 +21,28 @@ type TCPServer struct {
 	PauseReadChan chan bool
 
 	mu sync.Mutex
+
+	debugMode bool
 }
 
-func NewTCPServer(host string, port uint16) *TCPServer {
+func NewTCPServer(host string, port uint16, debugMode bool) *TCPServer {
 	return &TCPServer{
 		Host:             host,
 		Port:             port,
 		RealtimeValueMap: make(map[string]uint32),
 
 		PauseReadChan: make(chan bool),
+		debugMode:     debugMode,
 	}
 }
 
 func (t *TCPServer) Run() {
-	timeout := 2 * time.Second
+	if t.debugMode {
+		logger.Log.Println("TCP服务以测试模式启动，无TCP连接建立")
+		return
+	}
 
+	timeout := 2 * time.Second
 	// 创建一个 Dialer，并设置超时时间
 	dialer := net.Dialer{
 		Timeout: timeout,
@@ -45,7 +52,7 @@ func (t *TCPServer) Run() {
 		logger.Log.Println("无法建立TCP连接:", err)
 	}
 	t.Conn = conn
-	logger.Log.Println("建立TCP连接")
+	logger.Log.Println("TCP服务启动，与下位机建立TCP连接")
 
 	//for i := 2050; i < 2173; i += 2 {
 	//	t.Write(fmt.Sprintf("DD%d", i), 100000)

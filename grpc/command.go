@@ -28,6 +28,9 @@ func (c *command) Execute(ctx context.Context, req *pb.CommandRequest) (*pb.Comm
 		if c.controller.CurrentCommandName == "" {
 			// 无命令在运行
 			c.controller.CurrentCommandName = commandMap["commandName"].(string)
+			if commandMap["commandName"].(string) == "cook" {
+				c.controller.IsCooking = true
+			}
 			for _, ins := range commandMap["instructions"].([]interface{}) {
 				//logger.Log.Println(ins.(map[string]interface{}))
 				var instructionType = instruction.InstructionType((ins.(map[string]interface{})["instructionType"]).(string))
@@ -62,12 +65,18 @@ func (c *command) Execute(ctx context.Context, req *pb.CommandRequest) (*pb.Comm
 
 func (c *command) FetchStatus(ctx context.Context, req *pb.FetchRequest) (*pb.FetchResponse, error) {
 	type ControllerStatus struct {
-		CurrentCommandName string `json:"currentCommandName"`
-		IsPausing          bool   `json:"isPausing"`
+		CurrentCommandName          string `json:"currentCommandName"`
+		IsPausing                   bool   `json:"isPausing"`
+		IsRunning                   bool   `json:"isRunning"`
+		IsCooking                   bool   `json:"isCooking"`
+		IsPausingWithMovingFinished bool   `json:"isPausingWithMovingFinished"`
 	}
 	controllerStatus := ControllerStatus{
-		CurrentCommandName: c.controller.CurrentCommandName,
-		IsPausing:          c.controller.IsPausing,
+		CurrentCommandName:          c.controller.CurrentCommandName,
+		IsPausing:                   c.controller.IsPausing,
+		IsRunning:                   c.controller.IsRunning,
+		IsCooking:                   c.controller.IsCooking,
+		IsPausingWithMovingFinished: c.controller.IsPausingWithMovingFinished,
 	}
 	statusJSON, _ := json.Marshal(controllerStatus)
 	return &pb.FetchResponse{StatusJson: string(statusJSON)}, nil

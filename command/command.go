@@ -13,8 +13,8 @@ const (
 )
 
 const (
-	MULTIPLE = "multiple"
-	SINGLE   = "single"
+	MULTIPLE = "multiple" // 不可在其他命令执行过程中执行
+	SINGLE   = "single"   // 可在其他命令执行过程中执行
 )
 
 type Command struct {

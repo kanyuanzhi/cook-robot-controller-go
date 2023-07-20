@@ -3,25 +3,33 @@ package main
 import (
 	"cook-robot-controller-go/core"
 	"cook-robot-controller-go/grpc"
+	"cook-robot-controller-go/instruction"
 	"cook-robot-controller-go/modbus"
 	"cook-robot-controller-go/operator"
 	"time"
 )
 
 func main() {
+
+	debugMode := true
 	//tcpServer := modbus.NewTCPServer("192.168.6.6", 502)
-	tcpServer := modbus.NewTCPServer("192.168.6.6", 502)
+	tcpServer := modbus.NewTCPServer("192.168.6.6", 502, debugMode)
 	//tcpServer := modbus.NewTCPServer("127.0.0.1", 502)
-	//go tcpServer.Run()
+	go tcpServer.Run()
 
 	//
 	writer := operator.NewWriter(tcpServer)
 	reader := operator.NewReader(tcpServer)
-	controller := core.NewController(writer, reader, true)
+	controller := core.NewController(writer, reader, debugMode)
 	go controller.Run()
 
 	rpcServer := grpc.NewGRPCServer(controller)
 	go rpcServer.Run()
+
+	resetXYTInstruction := instruction.NewResetXYTInstruction()
+	controller.CurrentCommandName = "reset"
+	resetXYTInstruction.AddToController(controller)
+	go controller.Start()
 	//
 	//delayAction1 := action.NewDelayAction(1000)
 	//delayAction2 := action.NewDelayAction(1500)

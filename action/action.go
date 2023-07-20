@@ -6,6 +6,7 @@ import (
 
 type Actioner interface {
 	CheckType() ActionType
+	CheckName() string
 	Execute(writer *operator.Writer, reader *operator.Reader, debugMode bool)
 
 	GetStatusWordAddress() string
@@ -28,6 +29,7 @@ const (
 
 type BaseAction struct {
 	ActionType ActionType
+	ActionName string
 }
 
 func newBaseAction(actionType ActionType) *BaseAction {
@@ -38,6 +40,10 @@ func newBaseAction(actionType ActionType) *BaseAction {
 
 func (b *BaseAction) CheckType() ActionType {
 	return b.ActionType
+}
+
+func (b *BaseAction) CheckName() string {
+	return ""
 }
 
 func (b *BaseAction) Execute(writer *operator.Writer, reader *operator.Reader, debugMode bool) {
