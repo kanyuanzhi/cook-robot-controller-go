@@ -1,0 +1,9 @@
+debugMode: true
+
+grpc:
+  host: "localhost"
+  port: 50051
+
+modbus:
+  targetHost: "192.168.6.6"
+  port: 502

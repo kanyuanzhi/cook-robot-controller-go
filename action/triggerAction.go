@@ -2,6 +2,7 @@ package action
 
 import (
 	"cook-robot-controller-go/data"
+	"cook-robot-controller-go/logger"
 	"cook-robot-controller-go/operator"
 	"fmt"
 	"time"
@@ -9,15 +10,19 @@ import (
 
 type TriggerAction struct {
 	*BaseAction
-	TriggerAddressValue *data.AddressValue // 触发地址-值
-	triggerType         data.TriggerType
+	TriggerAddressValue       *data.AddressValue // 触发地址-值
+	triggerType               data.TriggerType
+	TriggerControlWordAddress string // 使用触发动作的控制字地址
+	TriggerYPosition          uint32 // y轴移动触发位置
 }
 
-func NewTriggerAction(triggerAddressValue *data.AddressValue, triggerType data.TriggerType) *TriggerAction {
+func NewTriggerAction(triggerAddressValue *data.AddressValue, triggerType data.TriggerType, triggerControlWordAddress string, triggerYPosition uint32) *TriggerAction {
 	return &TriggerAction{
-		BaseAction:          newBaseAction(TRIGGER),
-		TriggerAddressValue: triggerAddressValue,
-		triggerType:         triggerType,
+		BaseAction:                newBaseAction(TRIGGER),
+		TriggerAddressValue:       triggerAddressValue,
+		triggerType:               triggerType,
+		TriggerControlWordAddress: triggerControlWordAddress,
+		TriggerYPosition:          triggerYPosition,
 	}
 }
 
@@ -39,10 +44,28 @@ func (t *TriggerAction) Execute(writer *operator.Writer, reader *operator.Reader
 	}
 }
 
+func (t *TriggerAction) GetControlWordAddress() string {
+	return t.TriggerControlWordAddress
+}
+
 func (t *TriggerAction) BeforeExecuteInfo() string {
-	return fmt.Sprintf("[等待]触发%s=%d", t.TriggerAddressValue.Address, t.TriggerAddressValue.Value)
+	if t.triggerType == data.EQUAL_TO_TARGET {
+		return fmt.Sprintf("[等待]触发%s=%d", t.TriggerAddressValue.Address, t.TriggerAddressValue.Value)
+	} else if t.triggerType == data.LARGER_THAN_TARGET {
+		return fmt.Sprintf("[等待]触发%s>=%d", t.TriggerAddressValue.Address, t.TriggerAddressValue.Value)
+	} else {
+		logger.Log.Println("触发条件错误")
+		return ""
+	}
 }
 
 func (t *TriggerAction) AfterExecuteInfo() string {
-	return fmt.Sprintf("[结束]触发%s=%d", t.TriggerAddressValue.Address, t.TriggerAddressValue.Value)
+	if t.triggerType == data.EQUAL_TO_TARGET {
+		return fmt.Sprintf("[结束]触发%s=%d", t.TriggerAddressValue.Address, t.TriggerAddressValue.Value)
+	} else if t.triggerType == data.LARGER_THAN_TARGET {
+		return fmt.Sprintf("[结束]触发%s>=%d", t.TriggerAddressValue.Address, t.TriggerAddressValue.Value)
+	} else {
+		logger.Log.Println("触发条件错误")
+		return ""
+	}
 }

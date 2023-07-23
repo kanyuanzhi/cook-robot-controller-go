@@ -42,7 +42,7 @@ func (g *GroupAction) Execute(writer *operator.Writer, reader *operator.Reader, 
 			logger.Log.Println(action.BeforeExecuteInfo())
 			action.Execute(writer, reader, debugMode)
 			if action.CheckType() == CONTROL {
-				triggerAction := NewTriggerAction(data.NewAddressValue(action.GetStatusWordAddress(), 100), data.EQUAL_TO_TARGET)
+				triggerAction := NewTriggerAction(data.NewAddressValue(action.GetStatusWordAddress(), 100), data.EQUAL_TO_TARGET, action.GetControlWordAddress(), 0)
 				triggerAction.Execute(writer, reader, debugMode)
 				logger.Log.Println(triggerAction.AfterExecuteInfo())
 			}

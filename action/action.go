@@ -10,6 +10,7 @@ type Actioner interface {
 	Execute(writer *operator.Writer, reader *operator.Reader, debugMode bool)
 
 	GetStatusWordAddress() string
+	GetControlWordAddress() string
 	Pause()
 	Resume()
 
@@ -51,6 +52,10 @@ func (b *BaseAction) Execute(writer *operator.Writer, reader *operator.Reader, d
 }
 
 func (b *BaseAction) GetStatusWordAddress() string {
+	return ""
+}
+
+func (b *BaseAction) GetControlWordAddress() string {
 	return ""
 }
 

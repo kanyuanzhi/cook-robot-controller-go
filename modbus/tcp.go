@@ -13,9 +13,9 @@ import (
 )
 
 type TCPServer struct {
-	Host             string
-	Port             uint16
-	Conn             net.Conn
+	host             string
+	port             uint16
+	conn             net.Conn
 	RealtimeValueMap map[string]uint32
 
 	PauseReadChan chan bool
@@ -27,8 +27,8 @@ type TCPServer struct {
 
 func NewTCPServer(host string, port uint16, debugMode bool) *TCPServer {
 	return &TCPServer{
-		Host:             host,
-		Port:             port,
+		host:             host,
+		port:             port,
 		RealtimeValueMap: make(map[string]uint32),
 
 		PauseReadChan: make(chan bool),
@@ -38,6 +38,8 @@ func NewTCPServer(host string, port uint16, debugMode bool) *TCPServer {
 
 func (t *TCPServer) Run() {
 	if t.debugMode {
+		t.RealtimeValueMap["DD232"] = 4501
+		t.RealtimeValueMap["DD234"] = 2001
 		logger.Log.Println("TCP服务以测试模式启动，无TCP连接建立")
 		return
 	}
@@ -47,11 +49,11 @@ func (t *TCPServer) Run() {
 	dialer := net.Dialer{
 		Timeout: timeout,
 	}
-	conn, err := dialer.Dial("tcp", fmt.Sprintf("%s:%d", t.Host, t.Port))
+	conn, err := dialer.Dial("tcp", fmt.Sprintf("%s:%d", t.host, t.port))
 	if err != nil {
 		logger.Log.Println("无法建立TCP连接:", err)
 	}
-	t.Conn = conn
+	t.conn = conn
 	logger.Log.Println("TCP服务启动，与下位机建立TCP连接")
 
 	//for i := 2050; i < 2173; i += 2 {
@@ -144,14 +146,14 @@ func (t *TCPServer) Write(prefixAddress string, value uint64) {
 		CMD = append(CMD, encode(valueStrHigh, 2)...)
 	}
 	//logger.Log.Println(CMD)
-	_, err := t.Conn.Write(CMD)
+	_, err := t.conn.Write(CMD)
 	if err != nil {
 		logger.Log.Println(err)
 		return
 	}
 
 	buffer := make([]byte, 12)
-	_, err = t.Conn.Read(buffer)
+	_, err = t.conn.Read(buffer)
 
 	if err != nil {
 		fmt.Printf("读取数据失败：%v\n", err)
@@ -210,14 +212,14 @@ func (t *TCPServer) Read(prefixAddress string, size uint64) {
 	CMD = append(CMD, encode(addressStr, 2)...)
 	CMD = append(CMD, encode(sizeStr, 2)...)
 
-	_, err := t.Conn.Write(CMD)
+	_, err := t.conn.Write(CMD)
 	if err != nil {
 		logger.Log.Println(err)
 		return
 	}
 
 	buffer := make([]byte, 9+size*2)
-	_, err = t.Conn.Read(buffer)
+	_, err = t.conn.Read(buffer)
 	bufferHexStr := hex.EncodeToString(buffer)
 
 	// logger.Log.Printf("buffer长度%d", len(buffer))

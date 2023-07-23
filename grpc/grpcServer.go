@@ -4,22 +4,29 @@ import (
 	"cook-robot-controller-go/core"
 	pb "cook-robot-controller-go/grpc/commandRPC"
 	"cook-robot-controller-go/logger"
+	"fmt"
 	"google.golang.org/grpc"
 	"net"
 )
 
 type GRPCServer struct {
+	host string
+	port uint16
+
 	controller *core.Controller
 }
 
-func NewGRPCServer(controller *core.Controller) *GRPCServer {
+func NewGRPCServer(host string, port uint16, controller *core.Controller) *GRPCServer {
 	return &GRPCServer{
+		host:       host,
+		port:       port,
 		controller: controller,
 	}
 }
 
 func (g *GRPCServer) Run() {
-	listen, err := net.Listen("tcp", ":50051")
+	address := fmt.Sprintf("%s:%d", g.host, g.port)
+	listen, err := net.Listen("tcp", address)
 	if err != nil {
 		logger.Log.Fatalf("无法监听端口: %v", err)
 	}

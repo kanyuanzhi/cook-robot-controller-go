@@ -1,6 +1,7 @@
 package main
 
 import (
+	"cook-robot-controller-go/config"
 	"cook-robot-controller-go/core"
 	"cook-robot-controller-go/grpc"
 	"cook-robot-controller-go/instruction"
@@ -10,21 +11,19 @@ import (
 )
 
 func main() {
-
-	debugMode := true
-	//tcpServer := modbus.NewTCPServer("192.168.6.6", 502)
-	tcpServer := modbus.NewTCPServer("192.168.6.6", 502, debugMode)
-	//tcpServer := modbus.NewTCPServer("127.0.0.1", 502)
+	tcpServer := modbus.NewTCPServer(config.App.Modbus.TargetHost, config.App.Modbus.TargetPort, config.App.DebugMode)
 	go tcpServer.Run()
 
 	//
 	writer := operator.NewWriter(tcpServer)
 	reader := operator.NewReader(tcpServer)
-	controller := core.NewController(writer, reader, debugMode)
+	controller := core.NewController(writer, reader, tcpServer, config.App.DebugMode)
 	go controller.Run()
 
-	rpcServer := grpc.NewGRPCServer(controller)
+	rpcServer := grpc.NewGRPCServer(config.App.GRPC.Host, config.App.GRPC.Port, controller)
 	go rpcServer.Run()
+
+	time.Sleep(500 * time.Millisecond)
 
 	resetXYTInstruction := instruction.NewResetXYTInstruction()
 	controller.CurrentCommandName = "reset"

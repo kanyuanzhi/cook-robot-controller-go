@@ -6,6 +6,7 @@ import (
 
 type Instructioner interface {
 	CheckType() InstructionType
+	SetName(name string)
 	AddToController(controller *core.Controller)
 	ExecuteImmediately(controller *core.Controller)
 }
@@ -23,7 +24,6 @@ const (
 	SHAKE            = InstructionType("shake")
 	LAMPBLACK_PURIFY = InstructionType("lampblack_purify")
 	DOOR_UNLOCK      = InstructionType("door_unlock")
-	RESET_ALL        = InstructionType("reset_all")
 	RESET_XYT        = InstructionType("reset_xyt")
 	RESET_RT         = InstructionType("reset_rt")
 	PREPARE          = InstructionType("prepare")
@@ -38,13 +38,18 @@ const (
 
 type Instruction struct {
 	InstructionType InstructionType `json:"instructionType" mapstructure:"instructionType"`
+	InstructionName string          `json:"instructionName" mapstructure:"instructionName"`
 }
 
-func (i Instruction) CheckType() InstructionType {
-	return i.InstructionType
+func (ins Instruction) CheckType() InstructionType {
+	return ins.InstructionType
 }
 
-func (i Instruction) ExecuteImmediately(controller *core.Controller) {
+func (ins Instruction) SetName(name string) {
+	ins.InstructionName = name
+}
+
+func (ins Instruction) ExecuteImmediately(controller *core.Controller) {
 	return
 }
 
@@ -69,9 +74,12 @@ type SeasoningInstruction struct {
 	PumpToWeightMap map[string]uint32 `json:"pumpToWeightMap" mapstructure:"pumpToWeightMap"` // 泵号:重量
 }
 
-func NewSeasoningInstruction(pumpToWeightMap map[string]uint32) *SeasoningInstruction {
+func NewSeasoningInstruction(name string, pumpToWeightMap map[string]uint32) *SeasoningInstruction {
 	return &SeasoningInstruction{
-		Instruction:     NewInstruction(SEASONING),
+		Instruction: Instruction{
+			InstructionType: SEASONING,
+			InstructionName: name,
+		},
 		PumpToWeightMap: pumpToWeightMap,
 	}
 }
@@ -190,16 +198,6 @@ func NewDoorUnlockInstruction() *DoorUnlockInstruction {
 	}
 }
 
-type ResetAllInstruction struct {
-	Instruction `mapstructure:",squash"`
-}
-
-func NewResetAllInstruction() *ResetAllInstruction {
-	return &ResetAllInstruction{
-		Instruction: NewInstruction(RESET_ALL),
-	}
-}
-
 type ResetXYTInstruction struct {
 	Instruction `mapstructure:",squash"`
 }
@@ -214,9 +212,12 @@ type ResetRTInstruction struct {
 	Instruction `mapstructure:",squash"`
 }
 
-func NewResetRTInstruction() *ResetRTInstruction {
+func NewResetRTInstruction(name string) *ResetRTInstruction {
 	return &ResetRTInstruction{
-		Instruction: NewInstruction(RESET_RT),
+		Instruction: Instruction{
+			InstructionType: RESET_RT,
+			InstructionName: name,
+		},
 	}
 }
 
@@ -273,7 +274,6 @@ var InstructionTypeToStruct = map[InstructionType]Instructioner{
 	SHAKE:            ShakeInstruction{},
 	LAMPBLACK_PURIFY: LampblackPurifyInstruction{},
 	DOOR_UNLOCK:      DoorUnlockInstruction{},
-	RESET_ALL:        ResetAllInstruction{},
 	RESET_XYT:        ResetXYTInstruction{},
 	RESET_RT:         ResetRTInstruction{},
 	PREPARE:          PrepareInstruction{},

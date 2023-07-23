@@ -38,6 +38,10 @@ func (c *ControlAction) GetStatusWordAddress() string {
 	return c.StatusWordAddress
 }
 
+func (c *ControlAction) GetControlWordAddress() string {
+	return c.ControlWordAddress
+}
+
 // AxisResetControlAction 轴重置动作
 type AxisResetControlAction struct {
 	*ControlAction
@@ -63,7 +67,7 @@ func (a *AxisResetControlAction) AfterExecuteInfo() string {
 // AxisLocateControlAction 轴定位动作
 type AxisLocateControlAction struct {
 	*ControlAction
-	targetPosition *data.AddressValue // 目标位置
+	TargetPosition *data.AddressValue // 目标位置
 	speed          *data.AddressValue // 移动速度
 }
 
@@ -71,7 +75,7 @@ func NewAxisLocateControlAction(controlWordAddress string, statusWordAddress str
 	targetPosition *data.AddressValue, speed *data.AddressValue) *AxisLocateControlAction {
 	axleLocateControlAction := &AxisLocateControlAction{
 		ControlAction:  NewControlAction(controlWordAddress, statusWordAddress),
-		targetPosition: targetPosition,
+		TargetPosition: targetPosition,
 		speed:          speed,
 	}
 	axleLocateControlAction.ControlAction.AddressValueList = append(axleLocateControlAction.ControlAction.AddressValueList,
@@ -81,18 +85,18 @@ func NewAxisLocateControlAction(controlWordAddress string, statusWordAddress str
 
 func (a *AxisLocateControlAction) BeforeExecuteInfo() string {
 	return fmt.Sprintf("[开始]%s轴定位%d,速度%d,发送(%s,%d),(%s,%d),(%s,%d),状态字地址%s",
-		data.AxisControlWordAddressToAxis[a.ControlWordAddress], a.targetPosition.Value, a.speed.Value,
+		data.AxisControlWordAddressToAxis[a.ControlWordAddress], a.TargetPosition.Value, a.speed.Value,
 		a.ControlWordAddress, 1,
-		a.targetPosition.Address, a.targetPosition.Value,
+		a.TargetPosition.Address, a.TargetPosition.Value,
 		a.speed.Address, a.speed.Value,
 		a.StatusWordAddress)
 }
 
 func (a *AxisLocateControlAction) AfterExecuteInfo() string {
 	return fmt.Sprintf("[结束]%s轴定位%d,速度%d,发送(%s,%d),(%s,%d),(%s,%d),状态字地址%s",
-		data.AxisControlWordAddressToAxis[a.ControlWordAddress], a.targetPosition.Value, a.speed.Value,
+		data.AxisControlWordAddressToAxis[a.ControlWordAddress], a.TargetPosition.Value, a.speed.Value,
 		a.ControlWordAddress, 1,
-		a.targetPosition.Address, a.targetPosition.Value,
+		a.TargetPosition.Address, a.TargetPosition.Value,
 		a.speed.Address, a.speed.Value,
 		a.StatusWordAddress)
 }

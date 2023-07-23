@@ -2,8 +2,8 @@ package grpc
 
 import (
 	"context"
-	command2 "cook-robot-controller-go/command"
 	"cook-robot-controller-go/core"
+	"cook-robot-controller-go/data"
 	pb "cook-robot-controller-go/grpc/commandRPC"
 	"cook-robot-controller-go/instruction"
 	"cook-robot-controller-go/logger"
@@ -23,13 +23,14 @@ func (c *command) Execute(ctx context.Context, req *pb.CommandRequest) (*pb.Comm
 	if err != nil {
 		return nil, fmt.Errorf("无法解析命令JSON：%v", err)
 	}
-	if commandMap["commandType"].(string) == command2.MULTIPLE {
+	if commandMap["commandType"].(string) == data.COMMAND_TYPE_MULTIPLE {
 		// 多指令型命令，需要判断是否有其他命令在运行
 		if c.controller.CurrentCommandName == "" {
 			// 无命令在运行
 			c.controller.CurrentCommandName = commandMap["commandName"].(string)
 			if commandMap["commandName"].(string) == "cook" {
 				c.controller.IsCooking = true
+				c.controller.CurrentDishUuid = commandMap["dishUuid"].(string)
 			}
 			for _, ins := range commandMap["instructions"].([]interface{}) {
 				//logger.Log.Println(ins.(map[string]interface{}))
@@ -39,7 +40,6 @@ func (c *command) Execute(ctx context.Context, req *pb.CommandRequest) (*pb.Comm
 				if err != nil {
 					logger.Log.Println(err)
 				}
-				//logger.Log.Println(instructionStruct)
 				instructionStruct.AddToController(c.controller)
 			}
 			go c.controller.Start()
@@ -65,18 +65,33 @@ func (c *command) Execute(ctx context.Context, req *pb.CommandRequest) (*pb.Comm
 
 func (c *command) FetchStatus(ctx context.Context, req *pb.FetchRequest) (*pb.FetchResponse, error) {
 	type ControllerStatus struct {
-		CurrentCommandName          string `json:"currentCommandName"`
-		IsPausing                   bool   `json:"isPausing"`
-		IsRunning                   bool   `json:"isRunning"`
-		IsCooking                   bool   `json:"isCooking"`
-		IsPausingWithMovingFinished bool   `json:"isPausingWithMovingFinished"`
+		CurrentCommandName              string                `json:"currentCommandName"`
+		CurrentDishUuid                 string                `json:"currentDishUuid"`
+		CurrentInstructionName          string                `json:"currentInstructionName"`
+		CurrentInstructionInfo          *data.InstructionInfo `json:"currentInstructionInfo"`
+		IsPausing                       bool                  `json:"isPausing"`
+		IsRunning                       bool                  `json:"isRunning"`
+		IsCooking                       bool                  `json:"isCooking"`
+		IsPausingWithMovingFinished     bool                  `json:"isPausingWithMovingFinished"`
+		IsPausingWithMovingBackFinished bool                  `json:"isPausingWithMovingBackFinished"`
+		IsStirFrying                    bool                  `json:"isStirFrying"`
+		BottomTemperature               uint32                `json:"bottomTemperature"`
+		InfraredTemperature             uint32                `json:"infraredTemperature"`
+		CookingTime                     int64                 `json:"cookingTime"`
 	}
 	controllerStatus := ControllerStatus{
-		CurrentCommandName:          c.controller.CurrentCommandName,
-		IsPausing:                   c.controller.IsPausing,
-		IsRunning:                   c.controller.IsRunning,
-		IsCooking:                   c.controller.IsCooking,
-		IsPausingWithMovingFinished: c.controller.IsPausingWithMovingFinished,
+		CurrentCommandName:              c.controller.CurrentCommandName,
+		CurrentDishUuid:                 c.controller.CurrentDishUuid,
+		CurrentInstructionInfo:          c.controller.CurrentInstructionInfo,
+		IsPausing:                       c.controller.IsPausing,
+		IsRunning:                       c.controller.IsRunning,
+		IsCooking:                       c.controller.IsCooking,
+		IsPausingWithMovingFinished:     c.controller.IsPausingWithMovingFinished,
+		IsPausingWithMovingBackFinished: c.controller.IsPausingWithMovingBackFinished,
+		IsStirFrying:                    c.controller.IsStirFrying,
+		BottomTemperature:               c.controller.TcpServer.RealtimeValueMap[data.TEMPERATURE_BOTTOM_ADDRESS],
+		InfraredTemperature:             c.controller.TcpServer.RealtimeValueMap[data.TEMPERATURE_INFRARED_ADDRESS],
+		CookingTime:                     c.controller.CookingTime,
 	}
 	statusJSON, _ := json.Marshal(controllerStatus)
 	return &pb.FetchResponse{StatusJson: string(statusJSON)}, nil

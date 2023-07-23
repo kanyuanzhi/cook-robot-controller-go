@@ -1,16 +1,20 @@
 package core
 
+import "C"
 import (
 	"cook-robot-controller-go/action"
 	"cook-robot-controller-go/data"
 	"cook-robot-controller-go/logger"
+	"cook-robot-controller-go/modbus"
 	"cook-robot-controller-go/operator"
 	"time"
 )
 
 type Controller struct {
-	writer              *operator.Writer
-	reader              *operator.Reader
+	writer    *operator.Writer
+	reader    *operator.Reader
+	TcpServer *modbus.TCPServer
+
 	waitingActionChan   chan action.Actioner
 	executingActionChan chan action.Actioner
 	executingAction     action.Actioner
@@ -18,35 +22,63 @@ type Controller struct {
 
 	pauseChan chan bool
 
-	CurrentCommandName  string
-	PreviousCommandName string
+	CurrentCommandName string
+	CurrentDishUuid    string
 
-	IsPausing                   bool // 暂停中，只在炒制菜品过程中可以暂停
-	IsRunning                   bool // 运行中，包括炒制菜品、备菜、清洗、出菜等multiple命令执行中true，执行完毕false
-	IsCooking                   bool // 炒制菜品中
-	IsPausingWithMovingFinished bool // 中途加料暂停过程，移动y轴至加料位中false，完毕true
+	InstructionInfoChan    chan *data.InstructionInfo // 等待运行的指令队列，每个指令包含若干动作
+	CurrentInstructionInfo *data.InstructionInfo      // 当前在运行的指令
+	InstructionFlagChan    chan bool                  // 长度与waitingActionChan相同，每个flag对应一个action，当该action是本指令的第一个action时flag为true，否则为false
 
-	lastYAxisLocateControlAction chan action.Actioner
+	IsPausing                       bool // 暂停中，只在炒制菜品过程中可以暂停
+	IsRunning                       bool // 运行中，包括炒制菜品、备菜、清洗、出菜等multiple命令执行中true，执行完毕false
+	IsCooking                       bool // 炒制菜品中
+	IsPausingWithMovingFinished     bool // 中途加料暂停过程，移动y轴至加料位中false，完毕true
+	IsPausingWithMovingBackFinished bool // 中途加料恢复过程，移动y轴至原位置中false，完毕true
+	IsStirFrying                    bool // 正在翻炒（y轴定位翻炒位完毕），此时才允许中途加料
 
-	debugMode bool
+	CookingTime         int64 // 炒制菜品已运行时长
+	pauseCookTimingChan chan bool
+	pauseCookTimingFlag bool
+	stopCookTimingChan  chan bool
+
+	lastYAxisLocateControlAction action.Actioner
+
+	debugMode            bool
+	MaxActionNumber      int
+	MaxInstructionNumber int
 }
 
-func NewController(writer *operator.Writer, reader *operator.Reader, debugMode bool) *Controller {
-	maxActionsNumber := 100
+func NewController(writer *operator.Writer, reader *operator.Reader, tcpServer *modbus.TCPServer, debugMode bool) *Controller {
+	maxActionNumber := 100
+	maxInstructionNumber := 50
 	controller := &Controller{
-		writer:                       writer,
-		reader:                       reader,
-		waitingActionChan:            make(chan action.Actioner, maxActionsNumber),
-		executingActionChan:          make(chan action.Actioner),
-		executedActionChan:           make(chan bool, maxActionsNumber),
-		pauseChan:                    make(chan bool),
-		CurrentCommandName:           "",
-		IsPausing:                    false,
-		IsRunning:                    false,
-		IsCooking:                    false,
-		IsPausingWithMovingFinished:  false,
-		lastYAxisLocateControlAction: make(chan action.Actioner),
-		debugMode:                    debugMode,
+		writer:                          writer,
+		reader:                          reader,
+		TcpServer:                       tcpServer,
+		waitingActionChan:               make(chan action.Actioner, maxActionNumber),
+		executingActionChan:             make(chan action.Actioner),
+		executedActionChan:              make(chan bool, maxActionNumber),
+		pauseChan:                       make(chan bool),
+		CurrentCommandName:              "",
+		CurrentDishUuid:                 "",
+		InstructionInfoChan:             make(chan *data.InstructionInfo, maxInstructionNumber),
+		CurrentInstructionInfo:          &data.InstructionInfo{},
+		InstructionFlagChan:             make(chan bool, maxActionNumber),
+		IsPausing:                       false,
+		IsRunning:                       false,
+		IsCooking:                       false,
+		IsPausingWithMovingFinished:     true,
+		IsPausingWithMovingBackFinished: true,
+		IsStirFrying:                    false,
+		CookingTime:                     0,
+		pauseCookTimingChan:             make(chan bool),
+		pauseCookTimingFlag:             false,
+		stopCookTimingChan:              make(chan bool),
+		lastYAxisLocateControlAction:    nil,
+
+		debugMode:            debugMode,
+		MaxActionNumber:      maxActionNumber,
+		MaxInstructionNumber: maxInstructionNumber,
 	}
 	return controller
 }
@@ -66,14 +98,33 @@ func (c *Controller) AddAction(a action.Actioner) {
 	c.waitingActionChan <- a
 	c.executedActionChan <- true
 	if a.CheckType() == action.CONTROL {
-		triggerAction := action.NewTriggerAction(data.NewAddressValue(a.GetStatusWordAddress(), 100), data.EQUAL_TO_TARGET) // 100
+		var triggerYPosition uint32
+		if a.GetControlWordAddress() == data.Y_LOCATE_CONTROL_WORD_ADDRESS {
+			triggerYPosition = a.(*action.AxisLocateControlAction).TargetPosition.Value
+		}
+		triggerAction := action.NewTriggerAction(data.NewAddressValue(a.GetStatusWordAddress(), 100),
+			data.EQUAL_TO_TARGET, a.GetControlWordAddress(), triggerYPosition)
 		c.waitingActionChan <- triggerAction
 		c.executedActionChan <- true
 	}
 	if a.CheckType() == action.STOP {
-		triggerAction := action.NewTriggerAction(data.NewAddressValue(a.GetStatusWordAddress(), 0), data.EQUAL_TO_TARGET)
+		triggerAction := action.NewTriggerAction(data.NewAddressValue(a.GetStatusWordAddress(), 0),
+			data.EQUAL_TO_TARGET, a.GetControlWordAddress(), 0)
 		c.waitingActionChan <- triggerAction
 		c.executedActionChan <- true
+	}
+}
+
+func (c *Controller) AddInstructionInfo(insInfo *data.InstructionInfo) {
+	insInfo.Index = len(c.InstructionInfoChan) + 1 // 指令序号从1开始
+	logger.Log.Println(insInfo)
+	c.InstructionInfoChan <- insInfo
+	for i := 0; i < insInfo.ActionNumber; i++ {
+		if i == 0 {
+			c.InstructionFlagChan <- true
+		} else {
+			c.InstructionFlagChan <- false
+		}
 	}
 }
 
@@ -89,23 +140,41 @@ func (c *Controller) ExecuteImmediately(a action.Actioner) {
 
 func (c *Controller) Start() {
 	logger.Log.Printf("[%s开始运行]", c.CurrentCommandName)
+	go c.startTiming()
 	c.IsRunning = true
 	quitFlag := false
+	isNextInstruction := false
 	for {
 		select {
 		case executingAction := <-c.waitingActionChan:
+			isNextInstruction = <-c.InstructionFlagChan
+			if isNextInstruction {
+				c.CurrentInstructionInfo = <-c.InstructionInfoChan
+			}
 			go func() {
-				//if executingAction.GetStatusWordAddress() == data.Y_LOCATE_STATUS_WORD_ADDRESS {
-				//	if len(c.lastYAxisLocateControlAction) == 1 {
-				//		<-c.lastYAxisLocateControlAction
-				//	}
-				//	c.lastYAxisLocateControlAction <- executingAction
-				//}
+				if executingAction.GetControlWordAddress() == data.Y_LOCATE_CONTROL_WORD_ADDRESS && c.IsStirFrying {
+					// 当前y轴在翻炒位，此时执行y轴定位动作非定位至翻炒位的时，结束控制器翻炒状态
+					if executingAction.(*action.AxisLocateControlAction).TargetPosition.Value != data.YPositionToDistance[data.Y_STIR_FRY_1_POSITION] &&
+						executingAction.(*action.AxisLocateControlAction).TargetPosition.Value != data.YPositionToDistance[data.Y_STIR_FRY_2_POSITION] &&
+						executingAction.(*action.AxisLocateControlAction).TargetPosition.Value != data.YPositionToDistance[data.Y_STIR_FRY_3_POSITION] {
+						c.IsStirFrying = false
+					}
+				}
+
 				if executingAction.CheckType() != action.TRIGGER {
 					logger.Log.Println(executingAction.BeforeExecuteInfo())
 				}
+
 				executingAction.Execute(c.writer, c.reader, c.debugMode)
+
 				if executingAction.CheckType() == action.TRIGGER {
+					if executingAction.GetControlWordAddress() == data.Y_LOCATE_CONTROL_WORD_ADDRESS &&
+						(executingAction.(*action.TriggerAction).TriggerYPosition == data.YPositionToDistance[data.Y_STIR_FRY_1_POSITION] ||
+							executingAction.(*action.TriggerAction).TriggerYPosition == data.YPositionToDistance[data.Y_STIR_FRY_2_POSITION] ||
+							executingAction.(*action.TriggerAction).TriggerYPosition == data.YPositionToDistance[data.Y_STIR_FRY_3_POSITION]) {
+						// y轴定位翻炒位完毕
+						c.IsStirFrying = true
+					}
 					logger.Log.Println(executingAction.AfterExecuteInfo())
 				}
 				<-c.executingActionChan
@@ -127,41 +196,111 @@ func (c *Controller) Start() {
 		}
 	}
 	logger.Log.Printf("[%s结束运行]", c.CurrentCommandName)
-	c.waitingActionChan = make(chan action.Actioner, 100)
-	c.CurrentCommandName = ""
-	c.PreviousCommandName = ""
-
-	c.IsRunning = false
-	c.IsCooking = false
+	c.Stop()
 }
 
 func (c *Controller) Pause() {
+	c.pauseTiming()
 	c.IsPausing = true
+	//if c.executingAction.CheckType() == action.DELAY {
+	//	c.executingAction.Pause()
+	//} else if c.executingAction.CheckType() == action.CONTROL {
+	//	// control型动作需要在执行trig后才能暂停
+	//	triggerAction := <-c.waitingActionChan // control型动作后一定跟着一个trig型动作
+	//	triggerAction.Execute(c.writer, c.reader, c.debugMode)
+	//	<-c.executedActionChan // 总action数减1
+	//	c.pauseChan <- true
+	//} else {
+	//	c.pauseChan <- true
+	//}
 	if c.executingAction.CheckType() == action.DELAY {
-		c.executingAction.Pause()
+		go c.executingAction.Pause()
 	} else {
 		c.pauseChan <- true
 	}
 	logger.Log.Println("暂停运行......")
-	//c.PreviousCommandName = c.CurrentCommandName
-	//c.CurrentCommandName = "pause"
 }
 
 func (c *Controller) Resume() {
+	c.resumeTiming()
 	c.IsPausing = false
 	if c.executingAction.CheckType() == action.DELAY {
 		c.executingAction.Resume()
 	} else {
 		c.pauseChan <- true
 	}
-	//if len(c.lastYAxisLocateControlAction) == 1 {
-	//	yAxisLocateControlAction := <-c.lastYAxisLocateControlAction
-	//	yAxisLocateControlAction.Execute(c.writer, c.reader, c.debugMode)
+	// 如果之前有做过y轴定位动作，需要在恢复运行前将y轴定位到暂停前的位置
+	//c.IsPausingWithMovingBackFinished = false
+	//if c.lastYAxisLocateControlAction != nil {
+	//	c.lastYAxisLocateControlAction.Execute(c.writer, c.reader, c.debugMode)
+	//	triggerAction := action.NewTriggerAction(data.NewAddressValue(data.Y_LOCATE_STATUS_WORD_ADDRESS, 100), data.EQUAL_TO_TARGET)
+	//	triggerAction.Execute(c.writer, c.reader, c.debugMode)
 	//}
+	//c.IsPausingWithMovingBackFinished = true
+	//c.pauseChan <- true
+
 	logger.Log.Println("恢复运行......")
-	//c.CurrentCommandName = c.PreviousCommandName
 }
 
 func (c *Controller) Stop() {
+	c.stopTiming()
 
+	c.waitingActionChan = make(chan action.Actioner, c.MaxActionNumber)
+	c.CurrentCommandName = ""
+	c.CurrentDishUuid = ""
+
+	c.IsRunning = false
+	c.IsCooking = false
+
+	c.IsStirFrying = false
+	c.CookingTime = 0
+
+	c.lastYAxisLocateControlAction = nil
+}
+
+func (c *Controller) startTiming() {
+	if c.CurrentCommandName != data.COMMAND_NAME_COOK {
+		return
+	}
+	ticker := time.NewTicker(250 * time.Millisecond)
+	c.pauseCookTimingFlag = false
+	defer ticker.Stop()
+	quitTimingFlag := false
+	for {
+		select {
+		case <-ticker.C:
+			if !c.pauseCookTimingFlag {
+				c.CookingTime += 250
+			}
+		case p := <-c.pauseCookTimingChan:
+			c.pauseCookTimingFlag = p
+		case <-c.stopCookTimingChan:
+			quitTimingFlag = true
+		}
+		if quitTimingFlag {
+			break
+		}
+	}
+}
+
+func (c *Controller) pauseTiming() {
+	if c.CurrentCommandName != data.COMMAND_NAME_COOK {
+		return
+	}
+	c.pauseCookTimingChan <- true
+}
+
+func (c *Controller) resumeTiming() {
+	if c.CurrentCommandName != data.COMMAND_NAME_COOK {
+		return
+	}
+	c.pauseCookTimingChan <- false
+}
+
+func (c *Controller) stopTiming() {
+	if c.CurrentCommandName != data.COMMAND_NAME_COOK {
+		return
+	}
+	c.stopCookTimingChan <- true
+	c.CookingTime = 0
 }
