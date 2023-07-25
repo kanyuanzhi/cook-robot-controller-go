@@ -10,6 +10,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/mitchellh/mapstructure"
+	"os"
 )
 
 type command struct {
@@ -88,7 +89,7 @@ func (c *command) FetchStatus(ctx context.Context, req *pb.FetchRequest) (*pb.Fe
 		IsCooking:                       c.controller.IsCooking,
 		IsPausingWithMovingFinished:     c.controller.IsPausingWithMovingFinished,
 		IsPausingWithMovingBackFinished: c.controller.IsPausingWithMovingBackFinished,
-		IsStirFrying:                    c.controller.IsStirFrying,
+		IsStirFrying:                    c.controller.IsPausePermitted,
 		BottomTemperature:               c.controller.TcpServer.RealtimeValueMap[data.TEMPERATURE_BOTTOM_ADDRESS],
 		InfraredTemperature:             c.controller.TcpServer.RealtimeValueMap[data.TEMPERATURE_INFRARED_ADDRESS],
 		CookingTime:                     c.controller.CookingTime,
@@ -105,4 +106,9 @@ func (c *command) Pause(ctx context.Context, req *pb.PauseAndResumeRequest) (*pb
 func (c *command) Resume(ctx context.Context, req *pb.PauseAndResumeRequest) (*pb.PauseAndResumeResponse, error) {
 	c.controller.Resume()
 	return &pb.PauseAndResumeResponse{Result: 1}, nil
+}
+
+func (c *command) Shutdown(ctx context.Context, req *pb.ShutdownRequest) (*pb.ShutdownResponse, error) {
+	os.Exit(1)
+	return &pb.ShutdownResponse{Result: 1}, nil
 }

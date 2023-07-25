@@ -13,16 +13,14 @@ type TriggerAction struct {
 	TriggerAddressValue       *data.AddressValue // 触发地址-值
 	triggerType               data.TriggerType
 	TriggerControlWordAddress string // 使用触发动作的控制字地址
-	TriggerYPosition          uint32 // y轴移动触发位置
 }
 
-func NewTriggerAction(triggerAddressValue *data.AddressValue, triggerType data.TriggerType, triggerControlWordAddress string, triggerYPosition uint32) *TriggerAction {
+func NewTriggerAction(triggerAddressValue *data.AddressValue, triggerType data.TriggerType, triggerControlWordAddress string) *TriggerAction {
 	return &TriggerAction{
 		BaseAction:                newBaseAction(TRIGGER),
 		TriggerAddressValue:       triggerAddressValue,
 		triggerType:               triggerType,
 		TriggerControlWordAddress: triggerControlWordAddress,
-		TriggerYPosition:          triggerYPosition,
 	}
 }
 

@@ -54,7 +54,6 @@ func (d *DelayAction) Execute(writer *operator.Writer, reader *operator.Reader, 
 			break
 		}
 	}
-	//<-timer.C
 	return
 }
 

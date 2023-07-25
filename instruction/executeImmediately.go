@@ -14,8 +14,8 @@ func (d DoorUnlockInstruction) ExecuteImmediately(controller *core.Controller) {
 }
 
 func (p PauseToAddInstruction) ExecuteImmediately(controller *core.Controller) {
-	// 中途加料的暂停行为确保一定发生在y轴处在翻炒位时
-	if !controller.IsStirFrying {
+	// y轴处在翻炒位延时时才允许暂停中途加料
+	if !controller.IsPausePermitted {
 		logger.Log.Println("y轴不在翻炒位，禁止中途加料")
 		return
 	}
@@ -36,6 +36,5 @@ func (p PauseToAddInstruction) ExecuteImmediately(controller *core.Controller) {
 }
 
 func (p ResumeInstruction) ExecuteImmediately(controller *core.Controller) {
-	controller.IsPausing = false
 	controller.Resume()
 }

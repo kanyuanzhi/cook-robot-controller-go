@@ -39,7 +39,7 @@ func NewTCPServer(host string, port uint16, debugMode bool) *TCPServer {
 func (t *TCPServer) Run() {
 	if t.debugMode {
 		t.RealtimeValueMap["DD232"] = 4501
-		t.RealtimeValueMap["DD234"] = 2001
+		t.RealtimeValueMap["DD234"] = 300
 		logger.Log.Println("TCP服务以测试模式启动，无TCP连接建立")
 		return
 	}
@@ -154,9 +154,9 @@ func (t *TCPServer) Write(prefixAddress string, value uint64) {
 
 	buffer := make([]byte, 12)
 	_, err = t.conn.Read(buffer)
-
+	//logger.Log.Println(string(buffer))
 	if err != nil {
-		fmt.Printf("读取数据失败：%v\n", err)
+		logger.Log.Printf("读取数据失败：%v\n", err)
 		return
 	}
 	// 处理接收到的数据
@@ -225,7 +225,7 @@ func (t *TCPServer) Read(prefixAddress string, size uint64) {
 	// logger.Log.Printf("buffer长度%d", len(buffer))
 
 	if err != nil {
-		fmt.Printf("读取数据失败：%v\n", err)
+		logger.Log.Printf("读取数据失败：%v\n", err)
 		return
 	}
 	// 处理接收到的数据

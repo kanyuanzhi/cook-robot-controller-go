@@ -36,9 +36,14 @@ func (ins IngredientInstruction) AddToController(controller *core.Controller) {
 		data.NewAddressValue(data.SHAKE_UPWARD_SPEED_ADDRESS, 30000),
 		data.NewAddressValue(data.SHAKE_DOWNWARD_SPEED_ADDRESS, 20000),
 		data.NewAddressValue(data.SHAKE_DISTANCE_ADDRESS, 3200))
+	//axisYLocateStirFryControlAction := action.NewAxisLocateControlAction(data.Y_LOCATE_CONTROL_WORD_ADDRESS,
+	//	data.Y_LOCATE_STATUS_WORD_ADDRESS,
+	//	data.NewAddressValue(data.Y_LOCATE_POSITION_ADDRESS, data.YPositionToDistance[data.Y_STIR_FRY_3_POSITION]),
+	//	data.NewAddressValue(data.Y_LOCATE_SPEED_ADDRESS, data.Y_MOVE_SPEED))
 	controller.AddAction(axisYLocateControlAction)
 	controller.AddAction(axisXLocateControlAction)
 	controller.AddAction(shakeControlAction)
+	//controller.AddAction(axisYLocateStirFryControlAction)
 	controller.AddInstructionInfo(data.NewInstructionInfo(string(ins.InstructionType), ins.InstructionName, 6))
 	logger.Log.Printf("[步骤]添加食材，打开%d号菜仓。", slotNumber)
 }
@@ -64,12 +69,18 @@ func (ins SeasoningInstruction) AddToController(controller *core.Controller) {
 		}
 		pumpNumber := uint32(num)
 		var duration uint32 = 0
-		if pumpNumber >= 1 && pumpNumber <= 6 { // 液体泵
+		if pumpNumber == 1 { // 油泵
+			duration = uint32(math.Round(float64(weight) * 1000 / 12.8))
+		} else if pumpNumber >= 2 && pumpNumber <= 5 { // 液体泵
 			duration = uint32(math.Round(float64(weight) * 1000 / 6.4))
+		} else if pumpNumber == 6 { // 液体泵
+			duration = uint32(math.Round(float64(weight) * 1000 / 12.8))
 		} else if pumpNumber >= 7 && pumpNumber <= 8 { // 水泵
 			duration = uint32(math.Round(float64(weight) * 1000 / 6.4))
-		} else if pumpNumber >= 9 && pumpNumber <= 10 { // 固体泵
+		} else if pumpNumber == 9 { // 固体泵
 			duration = weight * 100
+		} else if pumpNumber == 10 { // 固体泵
+			duration = weight * 200
 		} else {
 			logger.Log.Println("wrong pump number")
 			return
@@ -95,6 +106,11 @@ func (ins SeasoningInstruction) AddToController(controller *core.Controller) {
 		controller.AddAction(solidGroupAction)
 		actionNumber += 3
 	}
+	//axisYLocateStirFryControlAction := action.NewAxisLocateControlAction(data.Y_LOCATE_CONTROL_WORD_ADDRESS,
+	//	data.Y_LOCATE_STATUS_WORD_ADDRESS,
+	//	data.NewAddressValue(data.Y_LOCATE_POSITION_ADDRESS, data.YPositionToDistance[data.Y_STIR_FRY_3_POSITION]),
+	//	data.NewAddressValue(data.Y_LOCATE_SPEED_ADDRESS, data.Y_MOVE_SPEED))
+	//controller.AddAction(axisYLocateStirFryControlAction)
 	controller.AddInstructionInfo(data.NewInstructionInfo(string(ins.InstructionType), ins.InstructionName, actionNumber))
 	logger.Log.Printf("[步骤]添加调料%s", logStr)
 }
@@ -113,9 +129,15 @@ func (ins WaterInstruction) AddToController(controller *core.Controller) {
 	pumpControlAction := action.NewPumpControlAction(data.PumpNumberToPumpControlWordAddress[ins.PumpNumber],
 		data.PumpNumberToPumpStatusWordAddress[ins.PumpNumber],
 		data.NewAddressValue(data.PumpNumberToPumpDurationAddress[ins.PumpNumber], duration))
+	//axisYLocateStirFryControlAction := action.NewAxisLocateControlAction(data.Y_LOCATE_CONTROL_WORD_ADDRESS,
+	//	data.Y_LOCATE_STATUS_WORD_ADDRESS,
+	//	data.NewAddressValue(data.Y_LOCATE_POSITION_ADDRESS, data.YPositionToDistance[data.Y_STIR_FRY_3_POSITION]),
+	//	data.NewAddressValue(data.Y_LOCATE_SPEED_ADDRESS, data.Y_MOVE_SPEED))
 
-	controller.AddAction(pumpControlAction)
 	controller.AddAction(axisYLocateControlActionLiquid)
+	controller.AddAction(pumpControlAction)
+	//controller.AddAction(axisYLocateStirFryControlAction)
+
 	controller.AddInstructionInfo(data.NewInstructionInfo(string(ins.InstructionType), ins.InstructionName, 4))
 	logger.Log.Printf("[步骤]添加水，%d号泵打开%d毫秒（%d克）", ins.PumpNumber, duration, ins.Weight)
 }
@@ -127,35 +149,41 @@ func (ins OilInstruction) AddToController(controller *core.Controller) {
 		data.NewAddressValue(data.Y_LOCATE_SPEED_ADDRESS, data.Y_MOVE_SPEED))
 	var duration uint32 = 0
 	if ins.PumpNumber == 1 { // 油泵
-		duration = uint32(math.Round(float64(ins.Weight) * 1000 / 6.4))
+		duration = uint32(math.Round(float64(ins.Weight) * 1000 / 12.8))
 	} else {
 		logger.Log.Println("wrong pump number")
 	}
 	pumpControlAction := action.NewPumpControlAction(data.PumpNumberToPumpControlWordAddress[ins.PumpNumber],
 		data.PumpNumberToPumpStatusWordAddress[ins.PumpNumber],
 		data.NewAddressValue(data.PumpNumberToPumpDurationAddress[ins.PumpNumber], duration))
-
+	//axisYLocateStirFryControlAction := action.NewAxisLocateControlAction(data.Y_LOCATE_CONTROL_WORD_ADDRESS,
+	//	data.Y_LOCATE_STATUS_WORD_ADDRESS,
+	//	data.NewAddressValue(data.Y_LOCATE_POSITION_ADDRESS, data.YPositionToDistance[data.Y_STIR_FRY_3_POSITION]),
+	//	data.NewAddressValue(data.Y_LOCATE_SPEED_ADDRESS, data.Y_MOVE_SPEED))
 	controller.AddAction(axisYLocateControlActionLiquid)
 	controller.AddAction(pumpControlAction)
+	//controller.AddAction(axisYLocateStirFryControlAction)
 	controller.AddInstructionInfo(data.NewInstructionInfo(string(ins.InstructionType), ins.InstructionName, 4))
 	logger.Log.Printf("[步骤]添加油，%d号泵打开%d毫秒（%d克）", ins.PumpNumber, duration, ins.Weight)
 }
 
 func (ins StirFryInstruction) AddToController(controller *core.Controller) {
-	axisYLocateControlAction := action.NewAxisLocateControlAction(data.Y_LOCATE_CONTROL_WORD_ADDRESS,
-		data.Y_LOCATE_STATUS_WORD_ADDRESS,
-		data.NewAddressValue(data.Y_LOCATE_POSITION_ADDRESS, data.YPositionToDistance[data.Y_STIR_FRY_3_POSITION]),
-		data.NewAddressValue(data.Y_LOCATE_SPEED_ADDRESS, data.Y_MOVE_SPEED))
 	speedValue := ins.Gear * 350
 	axleRotateControlAction := action.NewAxisRotateControlAction(data.R1_ROTATE_CONTROL_WORD_ADDRESS,
 		data.R1_ROTATE_STATUS_WORD_ADDRESS,
 		data.NewAddressValue(data.R1_ROTATE_MODE_ADDRESS, 1),
 		data.NewAddressValue(data.R1_ROTATE_SPEED_ADDRESS, speedValue),
 		data.NewAddressValue(data.R1_ROTATE_AMOUNT_ADDRESS, 0))
+	axisYLocateControlAction := action.NewAxisLocateControlAction(data.Y_LOCATE_CONTROL_WORD_ADDRESS,
+		data.Y_LOCATE_STATUS_WORD_ADDRESS,
+		data.NewAddressValue(data.Y_LOCATE_POSITION_ADDRESS, data.YPositionToDistance[data.Y_STIR_FRY_3_POSITION]),
+		data.NewAddressValue(data.Y_LOCATE_SPEED_ADDRESS, data.Y_MOVE_SPEED))
+
 	delayAction := action.NewDelayAction(ins.Duration * 1000)
 
-	controller.AddAction(axisYLocateControlAction)
+	// 先旋转再定位y轴
 	controller.AddAction(axleRotateControlAction)
+	controller.AddAction(axisYLocateControlAction)
 	controller.AddAction(delayAction)
 	controller.AddInstructionInfo(data.NewInstructionInfo(string(ins.InstructionType), ins.InstructionName, 5))
 	logger.Log.Printf("[步骤]添加翻炒，%d号档位（转速%d）持续%d秒", ins.Gear, speedValue, ins.Duration)
@@ -170,16 +198,21 @@ func (ins HeatInstruction) AddToController(controller *core.Controller) {
 	switch ins.JudgeType {
 	case BOTTOM_TEMPERATURE_JUDGE_TYPE:
 		triggerAction := action.NewTriggerAction(
-			data.NewAddressValue(data.TEMPERATURE_BOTTOM_ADDRESS, uint32(math.Round(ins.TargetTemperature*10))), data.LARGER_THAN_TARGET, data.TEMPERATURE_CONTROL_WORD_ADDRESS, 0)
+			data.NewAddressValue(data.TEMPERATURE_BOTTOM_ADDRESS, uint32(math.Round(ins.TargetTemperature*10))), data.LARGER_THAN_TARGET, data.TEMPERATURE_CONTROL_WORD_ADDRESS)
 		controller.AddAction(triggerAction)
 		controller.AddInstructionInfo(data.NewInstructionInfo(string(ins.InstructionType), ins.InstructionName, 3))
 		judgeTypeStr = fmt.Sprintf("锅底温度达到%.1f℃后开始下一步骤", ins.TargetTemperature)
 		break
 	case INFRARED_TEMPERATURE_JUDGE_TYPE:
+		axisYLocateStirFryControlAction := action.NewAxisLocateControlAction(data.Y_LOCATE_CONTROL_WORD_ADDRESS,
+			data.Y_LOCATE_STATUS_WORD_ADDRESS,
+			data.NewAddressValue(data.Y_LOCATE_POSITION_ADDRESS, data.YPositionToDistance[data.Y_STIR_FRY_3_POSITION]),
+			data.NewAddressValue(data.Y_LOCATE_SPEED_ADDRESS, data.Y_MOVE_SPEED))
 		triggerAction := action.NewTriggerAction(
-			data.NewAddressValue(data.TEMPERATURE_INFRARED_ADDRESS, uint32(math.Round(ins.TargetTemperature*10))), data.LARGER_THAN_TARGET, data.TEMPERATURE_CONTROL_WORD_ADDRESS, 0)
+			data.NewAddressValue(data.TEMPERATURE_INFRARED_ADDRESS, uint32(math.Round(ins.TargetTemperature*10))), data.LARGER_THAN_TARGET, data.TEMPERATURE_CONTROL_WORD_ADDRESS)
+		controller.AddAction(axisYLocateStirFryControlAction) // 红外测温前确保y轴前往翻炒位
 		controller.AddAction(triggerAction)
-		controller.AddInstructionInfo(data.NewInstructionInfo(string(ins.InstructionType), ins.InstructionName, 3))
+		controller.AddInstructionInfo(data.NewInstructionInfo(string(ins.InstructionType), ins.InstructionName, 5))
 		judgeTypeStr = fmt.Sprintf("红外温度达到%.1f℃后开始下一步骤", ins.TargetTemperature)
 		break
 	case DURATION_JUDGE_TYPE:
