@@ -41,7 +41,7 @@ type Controller struct {
 	pauseCookTimingFlag bool
 	stopCookTimingChan  chan bool
 
-	lastYAxisLocateControlAction action.Actioner
+	CurrentHeatingTemperature uint32 // 当前加热温度
 
 	debugMode            bool
 	MaxActionNumber      int
@@ -74,7 +74,6 @@ func NewController(writer *operator.Writer, reader *operator.Reader, tcpServer *
 		pauseCookTimingChan:             make(chan bool),
 		pauseCookTimingFlag:             false,
 		stopCookTimingChan:              make(chan bool),
-		lastYAxisLocateControlAction:    nil,
 
 		debugMode:            debugMode,
 		MaxActionNumber:      maxActionNumber,
@@ -86,10 +85,10 @@ func NewController(writer *operator.Writer, reader *operator.Reader, tcpServer *
 func (c *Controller) Run() {
 	if c.debugMode {
 		logger.Log.Println("控制器以测试模式启动，判定动作延时1s完成，延时动作正常完成，其他动作立即完成")
-		return
+		//return
 	}
 	for {
-		//logger.Log.Println(c.CurrentCommandName)
+		//logger.Log.Println(c.CurrentHeatingTemperature)
 		time.Sleep(1 * time.Second)
 	}
 }
@@ -124,6 +123,9 @@ func (c *Controller) AddInstructionInfo(insInfo *data.InstructionInfo) {
 }
 
 func (c *Controller) ExecuteImmediately(a action.Actioner) {
+	if a.CheckType() == action.CONTROL && a.GetControlWordAddress() == data.TEMPERATURE_CONTROL_WORD_ADDRESS {
+		c.CurrentHeatingTemperature = a.(*action.TemperatureControlAction).TargetTemperature.Value
+	}
 	if a.CheckType() != action.TRIGGER {
 		logger.Log.Println("[立即执行]", a.BeforeExecuteInfo())
 	}
@@ -155,6 +157,10 @@ func (c *Controller) Start() {
 						// 上一个动作为trigger且由y轴定位动作触发，允许中途加料
 						c.IsPausePermitted = true
 					}
+				}
+
+				if executingAction.CheckType() == action.CONTROL && executingAction.GetControlWordAddress() == data.TEMPERATURE_CONTROL_WORD_ADDRESS {
+					c.CurrentHeatingTemperature = executingAction.(*action.TemperatureControlAction).TargetTemperature.Value
 				}
 
 				if executingAction.CheckType() != action.TRIGGER {
@@ -194,17 +200,6 @@ func (c *Controller) Start() {
 func (c *Controller) Pause() {
 	c.pauseTiming()
 	c.IsPausing = true
-	//if c.executingAction.CheckType() == action.DELAY {
-	//	c.executingAction.Pause()
-	//} else if c.executingAction.CheckType() == action.CONTROL {
-	//	// control型动作需要在执行trig后才能暂停
-	//	triggerAction := <-c.waitingActionChan // control型动作后一定跟着一个trig型动作
-	//	triggerAction.Execute(c.writer, c.reader, c.debugMode)
-	//	<-c.executedActionChan // 总action数减1
-	//	c.pauseChan <- true
-	//} else {
-	//	c.pauseChan <- true
-	//}
 	if c.executingAction.CheckType() == action.DELAY {
 		go c.executingAction.Pause()
 	} else {
@@ -220,15 +215,6 @@ func (c *Controller) Resume() {
 	} else {
 		c.pauseChan <- true
 	}
-	// 如果之前有做过y轴定位动作，需要在恢复运行前将y轴定位到暂停前的位置
-	//c.IsPausingWithMovingBackFinished = false
-	//if c.lastYAxisLocateControlAction != nil {
-	//	c.lastYAxisLocateControlAction.Execute(c.writer, c.reader, c.debugMode)
-	//	triggerAction := action.NewTriggerAction(data.NewAddressValue(data.Y_LOCATE_STATUS_WORD_ADDRESS, 100), data.EQUAL_TO_TARGET)
-	//	triggerAction.Execute(c.writer, c.reader, c.debugMode)
-	//}
-	//c.IsPausingWithMovingBackFinished = true
-	//c.pauseChan <- true
 }
 
 func (c *Controller) Stop() {
@@ -245,8 +231,6 @@ func (c *Controller) Stop() {
 
 	c.IsPausePermitted = false
 	c.CookingTime = 0
-
-	c.lastYAxisLocateControlAction = nil
 }
 
 func (c *Controller) startTiming() {

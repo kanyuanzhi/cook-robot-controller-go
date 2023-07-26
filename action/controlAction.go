@@ -333,14 +333,14 @@ func (d *DoorUnlockControlAction) AfterExecuteInfo() string {
 // TemperatureControlAction 温度控制动作
 type TemperatureControlAction struct {
 	*ControlAction
-	targetTemperature *data.AddressValue // 目标温度
+	TargetTemperature *data.AddressValue // 目标温度
 }
 
 func NewTemperatureControlAction(controlWordAddress string, statusWordAddress string,
 	targetTemperature *data.AddressValue) *TemperatureControlAction {
 	temperatureControlAction := &TemperatureControlAction{
 		ControlAction:     NewControlAction(controlWordAddress, statusWordAddress),
-		targetTemperature: targetTemperature,
+		TargetTemperature: targetTemperature,
 	}
 	temperatureControlAction.ControlAction.AddressValueList = append(temperatureControlAction.ControlAction.AddressValueList,
 		targetTemperature,
@@ -351,16 +351,16 @@ func NewTemperatureControlAction(controlWordAddress string, statusWordAddress st
 
 func (c *TemperatureControlAction) BeforeExecuteInfo() string {
 	return fmt.Sprintf("[开始]温度控制,目标温度%.1f℃,发送(%s,%d),(%s,%d),状态字地址%s",
-		float32(c.targetTemperature.Value)/10,
+		float32(c.TargetTemperature.Value)/10,
 		c.ControlWordAddress, 1,
-		c.targetTemperature.Address, c.targetTemperature.Value,
+		c.TargetTemperature.Address, c.TargetTemperature.Value,
 		c.StatusWordAddress)
 }
 
 func (c *TemperatureControlAction) AfterExecuteInfo() string {
 	return fmt.Sprintf("[结束]温度控制,目标温度%1.f℃,发送(%s,%d),(%s,%d),状态字地址%s",
-		float32(c.targetTemperature.Value)/10,
+		float32(c.TargetTemperature.Value)/10,
 		c.ControlWordAddress, 1,
-		c.targetTemperature.Address, c.targetTemperature.Value,
+		c.TargetTemperature.Address, c.TargetTemperature.Value,
 		c.StatusWordAddress)
 }

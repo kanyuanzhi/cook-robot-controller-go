@@ -13,10 +13,11 @@ import (
 )
 
 type TCPServer struct {
-	host             string
-	port             uint16
-	conn             net.Conn
-	RealtimeValueMap map[string]uint32
+	host                 string
+	port                 uint16
+	conn                 net.Conn
+	RealtimeValueMap     map[string]uint32
+	RealtimeValueSyncMap *sync.Map
 
 	PauseReadChan chan bool
 
@@ -27,9 +28,10 @@ type TCPServer struct {
 
 func NewTCPServer(host string, port uint16, debugMode bool) *TCPServer {
 	return &TCPServer{
-		host:             host,
-		port:             port,
-		RealtimeValueMap: make(map[string]uint32),
+		host:                 host,
+		port:                 port,
+		RealtimeValueMap:     make(map[string]uint32),
+		RealtimeValueSyncMap: new(sync.Map),
 
 		PauseReadChan: make(chan bool),
 		debugMode:     debugMode,
@@ -40,6 +42,8 @@ func (t *TCPServer) Run() {
 	if t.debugMode {
 		t.RealtimeValueMap["DD232"] = 4501
 		t.RealtimeValueMap["DD234"] = 300
+		t.SetRealtimeValue("DD232", uint32(4510))
+		t.SetRealtimeValue("DD234", uint32(300))
 		logger.Log.Println("TCP服务以测试模式启动，无TCP连接建立")
 		return
 	}
@@ -237,7 +241,8 @@ func (t *TCPServer) Read(prefixAddress string, size uint64) {
 	for i = 0; i < size; i = i + 2 {
 		value, _ := strconv.ParseInt(bufferHexStr[18+4*(i+1):18+4*(i+1)+4]+bufferHexStr[18+4*i:18+4*i+4], 16, 64)
 		//value, _ := strconv.ParseInt(string(data[9+2*i:9+2*i+2]), 16, 64)
-		t.RealtimeValueMap[fmt.Sprintf("DD%d", addressNum+i)] = uint32(value)
+		//t.RealtimeValueMap[fmt.Sprintf("DD%d", addressNum+i)] = uint32(value)
+		t.SetRealtimeValue(fmt.Sprintf("DD%d", addressNum+i), uint32(value))
 		//t.RealtimeValueMap[fmt.Sprintf("%s%d", prefix, addressNum+i)] = uint32(value)
 		//logger.Log.Printf("%s%d:%d", prefix, addressNum+i, value)
 	}
@@ -252,4 +257,22 @@ func encode(numStr string, length uint8) []byte {
 	bytes := make([]byte, length)
 	binary.BigEndian.PutUint16(bytes, uint16(num))
 	return bytes
+}
+
+func (t *TCPServer) SetRealtimeValue(address string, value uint32) {
+	t.RealtimeValueSyncMap.Store(address, value)
+}
+
+func (t *TCPServer) GetRealtimeValue(address string) (uint32, bool) {
+	valueAny, has := t.RealtimeValueSyncMap.Load(address)
+	if !has {
+		logger.Log.Printf("当前RealtimeValueSyncMap中不存在%f值", address)
+		return 0, false
+	}
+	if value, ok := valueAny.(uint32); ok {
+		return value, true
+	} else {
+		logger.Log.Printf("当前RealtimeValueSyncMap中的%f值不为uint32类型", address)
+		return 0, false
+	}
 }

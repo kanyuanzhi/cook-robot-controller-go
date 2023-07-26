@@ -5,6 +5,7 @@ import (
 	"cook-robot-controller-go/core"
 	"cook-robot-controller-go/data"
 	"cook-robot-controller-go/logger"
+	"math"
 )
 
 func (d DoorUnlockInstruction) ExecuteImmediately(controller *core.Controller) {
@@ -35,6 +36,17 @@ func (p PauseToAddInstruction) ExecuteImmediately(controller *core.Controller) {
 	controller.ExecuteImmediately(doorUnlockControlAction)
 }
 
-func (p ResumeInstruction) ExecuteImmediately(controller *core.Controller) {
+func (r ResumeInstruction) ExecuteImmediately(controller *core.Controller) {
 	controller.Resume()
+}
+
+func (h HeatInstruction) ExecuteImmediately(controller *core.Controller) {
+	if h.JudgeType == NO_JUDGE {
+		temperatureControlAction := action.NewTemperatureControlAction(data.TEMPERATURE_CONTROL_WORD_ADDRESS,
+			data.TEMPERATURE_STATUS_WORD_ADDRESS,
+			data.NewAddressValue(data.TEMPERATURE_ADDRESS, uint32(math.Round(h.Temperature*10))))
+		controller.ExecuteImmediately(temperatureControlAction)
+	} else {
+		logger.Log.Println("只有无控制的加热指令可以立即执行")
+	}
 }

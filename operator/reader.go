@@ -7,50 +7,20 @@ import (
 )
 
 type Reader struct {
-	tcpServer        *modbus.TCPServer
-	realtimeValueMap map[string]uint32
+	tcpServer *modbus.TCPServer
 }
 
 func NewReader(tcpServer *modbus.TCPServer) *Reader {
-	realtimeValueMap := make(map[string]uint32)
-
-	realtimeValueMap[data.X_RESET_STATUS_WORD_ADDRESS] = 100
-	realtimeValueMap[data.Y_RESET_STATUS_WORD_ADDRESS] = 100
-	realtimeValueMap[data.Z_RESET_STATUS_WORD_ADDRESS] = 100
-	realtimeValueMap[data.R1_RESET_STATUS_WORD_ADDRESS] = 100
-	realtimeValueMap[data.R2_RESET_STATUS_WORD_ADDRESS] = 100
-
-	realtimeValueMap[data.X_LOCATE_STATUS_WORD_ADDRESS] = 100
-	realtimeValueMap[data.Y_LOCATE_STATUS_WORD_ADDRESS] = 100
-	realtimeValueMap[data.Z_LOCATE_STATUS_WORD_ADDRESS] = 100
-	realtimeValueMap[data.R1_LOCATE_STATUS_WORD_ADDRESS] = 100
-	realtimeValueMap[data.R2_LOCATE_STATUS_WORD_ADDRESS] = 100
-
-	realtimeValueMap[data.R1_ROTATE_STATUS_WORD_ADDRESS] = 100
-
-	realtimeValueMap[data.DISH_OUT_STATUS_WORD_ADDRESS] = 100
-
-	//realtimeValueMap[data.PUMP_STATUS_WORD_ADDRESS] = 100
-
-	realtimeValueMap[data.LAMPBLACK_PURIFY_STATUS_WORD_ADDRESS] = 100
-
-	realtimeValueMap[data.DOOR_UNLOCK_STATUS_WORD_ADDRESS] = 100
-
-	realtimeValueMap[data.TEMPERATURE_STATUS_WORD_ADDRESS] = 100
-	realtimeValueMap[data.TEMPERATURE_BOTTOM_ADDRESS] = 0
-	realtimeValueMap[data.TEMPERATURE_INFRARED_ADDRESS] = 0
-	realtimeValueMap[data.TEMPERATURE_WARNING_ADDRESS] = 0
-
 	reader := &Reader{
-		tcpServer:        tcpServer,
-		realtimeValueMap: realtimeValueMap,
+		tcpServer: tcpServer,
 	}
 	return reader
 }
 
 func (r *Reader) Trig(address string, targetValue uint32, triggerType data.TriggerType) bool {
 	r.tcpServer.Read("DS200", 120)
-	if realtimeValue, has := r.tcpServer.RealtimeValueMap[address]; has {
+	//if realtimeValue, has := r.tcpServer.RealtimeValueMap[address]; has {
+	if realtimeValue, ok := r.tcpServer.GetRealtimeValue(address); ok {
 		switch triggerType {
 		case data.LARGER_THAN_TARGET:
 			if realtimeValue >= targetValue {
@@ -71,7 +41,6 @@ func (r *Reader) Trig(address string, targetValue uint32, triggerType data.Trigg
 			return false
 		}
 	} else {
-		logger.Log.Println("no address")
-		return true
+		return false
 	}
 }

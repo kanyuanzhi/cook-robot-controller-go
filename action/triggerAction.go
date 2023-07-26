@@ -31,11 +31,17 @@ func (t *TriggerAction) Execute(writer *operator.Writer, reader *operator.Reader
 	}
 	time.Sleep(200 * time.Millisecond) // 延时200ms执行trig，确保状态字重置
 	ticker := time.NewTicker(100 * time.Millisecond)
+	trigSuccessCount := 0
 	defer ticker.Stop()
 	for {
 		select {
 		case <-ticker.C:
 			if reader.Trig(t.TriggerAddressValue.Address, t.TriggerAddressValue.Value, t.triggerType) {
+				trigSuccessCount += 1
+			} else {
+				trigSuccessCount = 0
+			}
+			if trigSuccessCount == 3 { // 连续3次触发才会判定成功
 				return
 			}
 		}

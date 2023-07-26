@@ -75,11 +75,14 @@ func (c *command) FetchStatus(ctx context.Context, req *pb.FetchRequest) (*pb.Fe
 		IsCooking                       bool                  `json:"isCooking"`
 		IsPausingWithMovingFinished     bool                  `json:"isPausingWithMovingFinished"`
 		IsPausingWithMovingBackFinished bool                  `json:"isPausingWithMovingBackFinished"`
-		IsStirFrying                    bool                  `json:"isStirFrying"`
+		IsPausePermitted                bool                  `json:"isPausePermitted"`
 		BottomTemperature               uint32                `json:"bottomTemperature"`
 		InfraredTemperature             uint32                `json:"infraredTemperature"`
 		CookingTime                     int64                 `json:"cookingTime"`
+		CurrentHeatingTemperature       uint32                `json:"currentHeatingTemperature"`
 	}
+	bottomTemperature, _ := c.controller.TcpServer.GetRealtimeValue(data.TEMPERATURE_BOTTOM_ADDRESS)
+	infraredTemperature, _ := c.controller.TcpServer.GetRealtimeValue(data.TEMPERATURE_INFRARED_ADDRESS)
 	controllerStatus := ControllerStatus{
 		CurrentCommandName:              c.controller.CurrentCommandName,
 		CurrentDishUuid:                 c.controller.CurrentDishUuid,
@@ -89,10 +92,11 @@ func (c *command) FetchStatus(ctx context.Context, req *pb.FetchRequest) (*pb.Fe
 		IsCooking:                       c.controller.IsCooking,
 		IsPausingWithMovingFinished:     c.controller.IsPausingWithMovingFinished,
 		IsPausingWithMovingBackFinished: c.controller.IsPausingWithMovingBackFinished,
-		IsStirFrying:                    c.controller.IsPausePermitted,
-		BottomTemperature:               c.controller.TcpServer.RealtimeValueMap[data.TEMPERATURE_BOTTOM_ADDRESS],
-		InfraredTemperature:             c.controller.TcpServer.RealtimeValueMap[data.TEMPERATURE_INFRARED_ADDRESS],
+		IsPausePermitted:                c.controller.IsPausePermitted,
+		BottomTemperature:               bottomTemperature,
+		InfraredTemperature:             infraredTemperature,
 		CookingTime:                     c.controller.CookingTime,
+		CurrentHeatingTemperature:       c.controller.CurrentHeatingTemperature,
 	}
 	statusJSON, _ := json.Marshal(controllerStatus)
 	return &pb.FetchResponse{StatusJson: string(statusJSON)}, nil
