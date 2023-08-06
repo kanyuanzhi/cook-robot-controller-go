@@ -13,24 +13,24 @@ import (
 )
 
 type TCPServer struct {
-	host                 string
-	port                 uint16
-	conn                 net.Conn
-	RealtimeValueMap     map[string]uint32
+	host string
+	port uint16
+	conn net.Conn
+	//RealtimeValueMap     map[string]uint32
 	RealtimeValueSyncMap *sync.Map
 
 	PauseReadChan chan bool
 
-	mu sync.Mutex
+	//mu sync.Mutex
 
 	debugMode bool
 }
 
 func NewTCPServer(host string, port uint16, debugMode bool) *TCPServer {
 	return &TCPServer{
-		host:                 host,
-		port:                 port,
-		RealtimeValueMap:     make(map[string]uint32),
+		host: host,
+		port: port,
+		//RealtimeValueMap:     make(map[string]uint32),
 		RealtimeValueSyncMap: new(sync.Map),
 
 		PauseReadChan: make(chan bool),
@@ -40,8 +40,8 @@ func NewTCPServer(host string, port uint16, debugMode bool) *TCPServer {
 
 func (t *TCPServer) Run() {
 	if t.debugMode {
-		t.RealtimeValueMap["DD232"] = 4501
-		t.RealtimeValueMap["DD234"] = 300
+		//t.RealtimeValueMap["DD232"] = 4501
+		//t.RealtimeValueMap["DD234"] = 300
 		t.SetRealtimeValue("DD232", uint32(4510))
 		t.SetRealtimeValue("DD234", uint32(300))
 		logger.Log.Println("TCP服务以测试模式启动，无TCP连接建立")
@@ -236,8 +236,8 @@ func (t *TCPServer) Read(prefixAddress string, size uint64) {
 	//data := buffer[:n]
 	//logger.Log.Println(data)
 	var i uint64
-	t.mu.Lock()
-	defer t.mu.Unlock()
+	//t.mu.Lock()
+	//defer t.mu.Unlock()
 	for i = 0; i < size; i = i + 2 {
 		value, _ := strconv.ParseInt(bufferHexStr[18+4*(i+1):18+4*(i+1)+4]+bufferHexStr[18+4*i:18+4*i+4], 16, 64)
 		//value, _ := strconv.ParseInt(string(data[9+2*i:9+2*i+2]), 16, 64)

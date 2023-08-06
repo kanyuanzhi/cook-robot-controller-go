@@ -333,7 +333,7 @@ func (d *DoorUnlockControlAction) AfterExecuteInfo() string {
 // TemperatureControlAction 温度控制动作
 type TemperatureControlAction struct {
 	*ControlAction
-	TargetTemperature *data.AddressValue // 目标温度
+	TargetTemperature *data.AddressValue // 目标温度，单位：0.1摄氏度
 }
 
 func NewTemperatureControlAction(controlWordAddress string, statusWordAddress string,

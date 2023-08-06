@@ -6,4 +6,4 @@ grpc:
 
 modbus:
   targetHost: "192.168.6.6"
-  port: 502
+  targetPort: 502

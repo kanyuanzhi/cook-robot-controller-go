@@ -27,7 +27,7 @@ type Controller struct {
 
 	InstructionInfoChan    chan *data.InstructionInfo // 等待运行的指令队列，每个指令包含若干动作
 	CurrentInstructionInfo *data.InstructionInfo      // 当前在运行的指令
-	InstructionFlagChan    chan bool                  // 长度与waitingActionChan相同，每个flag对应一个action，当该action是本指令的第一个action时flag为true，否则为false
+	InstructionFlagChan    chan bool                  // 长度与waitingActionChan相同，每个flag对应一个action，当该action是本指令的第一个action时flag为true，否则为false，用以判断指令切换
 
 	IsPausing                       bool // 暂停中，只在炒制菜品过程中可以暂停
 	IsRunning                       bool // 运行中，包括炒制菜品、备菜、清洗、出菜等multiple命令执行中true，执行完毕false
@@ -35,6 +35,10 @@ type Controller struct {
 	IsPausingWithMovingFinished     bool // 中途加料暂停过程，移动y轴至加料位中false，完毕true
 	IsPausingWithMovingBackFinished bool // 中途加料恢复过程，移动y轴至原位置中false，完毕true
 	IsPausePermitted                bool // 是否允许暂停，翻炒延时过程中才允许暂停中途加料
+
+	// IsWashing和IsPoured同为false时，前端弹出不可取消界面要求倒水，倒完水后IsWashing为false，IsPoured为true，自动隐藏倒水界面
+	IsWashing bool // 清洗中。默认为false。清洗开始时将其设置为true，结束为false
+	IsPoured  bool // 是否倒完水，默认为ture。清洗开始时将其设置为false，倒完水后为true
 
 	CookingTime         int64 // 炒制菜品已运行时长
 	pauseCookTimingChan chan bool
@@ -49,8 +53,8 @@ type Controller struct {
 }
 
 func NewController(writer *operator.Writer, reader *operator.Reader, tcpServer *modbus.TCPServer, debugMode bool) *Controller {
-	maxActionNumber := 100
-	maxInstructionNumber := 50
+	maxActionNumber := 1000
+	maxInstructionNumber := 500
 	controller := &Controller{
 		writer:                          writer,
 		reader:                          reader,
@@ -67,6 +71,8 @@ func NewController(writer *operator.Writer, reader *operator.Reader, tcpServer *
 		IsPausing:                       false,
 		IsRunning:                       false,
 		IsCooking:                       false,
+		IsWashing:                       false,
+		IsPoured:                        true,
 		IsPausingWithMovingFinished:     true,
 		IsPausingWithMovingBackFinished: true,
 		IsPausePermitted:                false,
@@ -88,7 +94,7 @@ func (c *Controller) Run() {
 		//return
 	}
 	for {
-		//logger.Log.Println(c.CurrentHeatingTemperature)
+		//logger.Log.Println(len(c.executedActionFlagChan))
 		time.Sleep(1 * time.Second)
 	}
 }

@@ -30,6 +30,8 @@ const (
 	DELAY            = InstructionType("delay")
 	RESUME           = InstructionType("resume")
 	PAUSE_TO_ADD     = InstructionType("pause_to_add")
+	WASH             = InstructionType("wash")
+	POUR             = InstructionType("pour")
 
 	AXIS   = InstructionType("axis")
 	ROTATE = InstructionType("rotate")
@@ -72,15 +74,17 @@ func NewIngredientInstruction(slotNumber string) *IngredientInstruction {
 type SeasoningInstruction struct {
 	Instruction     `mapstructure:",squash"`
 	PumpToWeightMap map[string]uint32 `json:"pumpToWeightMap" mapstructure:"pumpToWeightMap"` // 泵号:重量
+	PumpToRatioMap  map[string]uint32 `json:"pumpToRatioMap" mapstructure:"pumpToRatioMap"`   // 泵号:重量g与时长ms比例
 }
 
-func NewSeasoningInstruction(name string, pumpToWeightMap map[string]uint32) *SeasoningInstruction {
+func NewSeasoningInstruction(name string, pumpToWeightMap map[string]uint32, pumpToRatioMap map[string]uint32) *SeasoningInstruction {
 	return &SeasoningInstruction{
 		Instruction: Instruction{
 			InstructionType: SEASONING,
 			InstructionName: name,
 		},
 		PumpToWeightMap: pumpToWeightMap,
+		PumpToRatioMap:  pumpToRatioMap,
 	}
 }
 
@@ -88,13 +92,15 @@ type WaterInstruction struct {
 	Instruction `mapstructure:",squash"`
 	PumpNumber  uint32 `json:"pumpNumber" mapstructure:"pumpNumber"`
 	Weight      uint32 `json:"weight"`
+	Ratio       uint32 `json:"ratio"`
 }
 
-func NewWaterInstruction(pumpNumber uint32, weight uint32) *WaterInstruction {
+func NewWaterInstruction(pumpNumber uint32, weight uint32, ratio uint32) *WaterInstruction {
 	return &WaterInstruction{
 		Instruction: NewInstruction(WATER),
 		PumpNumber:  pumpNumber,
 		Weight:      weight,
+		Ratio:       ratio,
 	}
 }
 
@@ -102,13 +108,15 @@ type OilInstruction struct {
 	Instruction `mapstructure:",squash"`
 	PumpNumber  uint32 `json:"pumpNumber" mapstructure:"pumpNumber"`
 	Weight      uint32 `json:"weight"`
+	Ratio       uint32 `json:"ratio"`
 }
 
-func NewOilInstruction(pumpNumber uint32, weight uint32) *OilInstruction {
+func NewOilInstruction(pumpNumber uint32, weight uint32, ratio uint32) *OilInstruction {
 	return &OilInstruction{
 		Instruction: NewInstruction(OIL),
 		PumpNumber:  pumpNumber,
 		Weight:      weight,
+		Ratio:       ratio,
 	}
 }
 
@@ -231,6 +239,26 @@ func NewPrepareInstruction() *PrepareInstruction {
 	}
 }
 
+type WashInstruction struct {
+	Instruction `mapstructure:",squash"`
+}
+
+func NewWashInstruction() *WashInstruction {
+	return &WashInstruction{
+		Instruction: NewInstruction(WASH),
+	}
+}
+
+type PourInstruction struct {
+	Instruction `mapstructure:",squash"`
+}
+
+func NewPourInstruction() *PourInstruction {
+	return &PourInstruction{
+		Instruction: NewInstruction(POUR),
+	}
+}
+
 type DelayInstruction struct {
 	Instruction `mapstructure:",squash"`
 	Duration    uint32 `json:"duration"`
@@ -277,6 +305,8 @@ var InstructionTypeToStruct = map[InstructionType]Instructioner{
 	RESET_XYT:        ResetXYTInstruction{},
 	RESET_RT:         ResetRTInstruction{},
 	PREPARE:          PrepareInstruction{},
+	WASH:             WashInstruction{},
+	POUR:             PourInstruction{},
 	DELAY:            DelayInstruction{},
 	RESUME:           ResumeInstruction{},
 	PAUSE_TO_ADD:     PauseToAddInstruction{},
