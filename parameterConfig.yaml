@@ -1,0 +1,44 @@
+xAxis: #X轴
+  moveSpeed: 20000 #定位速度
+  readyPosition: 54396 #上菜位
+  box1Position: 42690 #菜仓1位
+  box2Position: 25937 #菜仓2位
+  box3Position: 9069 #菜仓3位
+  box4Position: 20 #菜仓4位
+  safePosition: 10 #安全位
+  shakeAmount: 5 #抖菜次数
+  shakeUpwardSpeed: 30000 #抖菜上行速度
+  shakeDownwardSpeed: 20000 #抖菜下行速度
+  shakeDistance: 3200 #抖菜距离
+
+yAxis: #Y轴
+  moveSpeed: 600 #定位速度
+  ingredientPosition: 2000 #接菜位
+  liquidSeasoningPosition: 3200 #接液体料位
+  solidSeasoningPosition: 3485 #接固体料位
+  stirFry1Position: 3500 #炒菜1位
+  stirFry2Position: 3500 #炒菜2位
+  stirFry3Position: 3500 #炒菜3位
+  washPosition: 3400 #洗锅位
+  pourPosition: 10 #倒位水
+  dishOutHighPosition: 4200 #出菜高位
+  dishOutLowPosition: 4700 #出菜低位
+  dishOutAmount: 3 #出菜次数
+  dishOutUpwardSpeed: 600 #出菜上行速度
+  dishOutDownwardSpeed: 2200 #出菜下行次数
+
+wash: #洗锅
+  rotateSpeed: 1500 #R1轴转速
+  rotateCrossAmount: 3 #R1轴正反转圈数
+  addWaterDuration: 15000 #水泵开启时间，ms
+  temperature: 900 #加热温度，0.1℃
+  duration: 5000 #洗锅时长，ms
+  pumpNumber: 7 #洗锅的水泵号
+  pourWaterDuration: 4000 #倒水停留时长
+
+lampblackPurify: #油烟净化
+  enable: true # 是否支持油烟净化
+  mode: 2 #油烟净化模式，1:排气，2:排气+净化
+
+
+

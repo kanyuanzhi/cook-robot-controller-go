@@ -18,7 +18,7 @@ func NewReader(tcpServer *modbus.TCPServer) *Reader {
 }
 
 func (r *Reader) Trig(address string, targetValue uint32, triggerType data.TriggerType) bool {
-	r.tcpServer.Read("DS200", 120)
+	r.tcpServer.Read("DS2900", 120)
 	if realtimeValue, ok := r.tcpServer.GetRealtimeValue(address); ok {
 		switch triggerType {
 		case data.LARGER_THAN_TARGET:

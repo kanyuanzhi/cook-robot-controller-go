@@ -32,10 +32,10 @@ func (ins IngredientInstruction) AddToController(controller *core.Controller) {
 		data.NewAddressValue(data.X_LOCATE_SPEED_ADDRESS, data.X_MOVE_SPEED))
 	shakeControlAction := action.NewShakeControlAction(data.SHAKE_CONTROL_WORD_ADDRESS,
 		data.SHAKE_STATUS_WORD_ADDRESS,
-		data.NewAddressValue(data.SHAKE_AMOUNT_ADDRESS, 5),
-		data.NewAddressValue(data.SHAKE_UPWARD_SPEED_ADDRESS, 30000),
-		data.NewAddressValue(data.SHAKE_DOWNWARD_SPEED_ADDRESS, 20000),
-		data.NewAddressValue(data.SHAKE_DISTANCE_ADDRESS, 3200))
+		data.NewAddressValue(data.SHAKE_AMOUNT_ADDRESS, data.SHAKE_AMOUNT),
+		data.NewAddressValue(data.SHAKE_UPWARD_SPEED_ADDRESS, data.SHAKE_UPWARD_SPEED),
+		data.NewAddressValue(data.SHAKE_DOWNWARD_SPEED_ADDRESS, data.SHAKE_DOWNWARD_SPEED),
+		data.NewAddressValue(data.SHAKE_DISTANCE_ADDRESS, data.SHAKE_DISTANCE))
 	controller.AddAction(axisYLocateControlAction)
 	controller.AddAction(axisXLocateControlAction)
 	controller.AddAction(shakeControlAction)
@@ -221,27 +221,29 @@ func (ins HeatInstruction) AddToController(controller *core.Controller) {
 func (ins DishOutInstruction) AddToController(controller *core.Controller) {
 	dishOutControlAction := action.NewDishOutControlAction(data.DISH_OUT_CONTROL_WORD_ADDRESS,
 		data.DISH_OUT_STATUS_WORD_ADDRESS,
-		data.NewAddressValue(data.DISH_OUT_AMOUNT_ADDRESS, 3),
-		data.NewAddressValue(data.DISH_OUT_UPWARD_SPEED_ADDRESS, 600),
-		data.NewAddressValue(data.DISH_OUT_DOWNWARD_SPEED_ADDRESS, 2200),
-		data.NewAddressValue(data.DISH_OUT_UPWARD_POSITION_ADDRESS, data.YPositionToDistance[data.Y_DISH_OUT_HEIGH_POSITION]),
+		data.NewAddressValue(data.DISH_OUT_AMOUNT_ADDRESS, data.DISH_OUT_AMOUNT),
+		data.NewAddressValue(data.DISH_OUT_UPWARD_SPEED_ADDRESS, data.DISH_OUT_UPWARD_SPEED),
+		data.NewAddressValue(data.DISH_OUT_DOWNWARD_SPEED_ADDRESS, data.DISH_OUT_DOWNWARD_SPEED),
+		data.NewAddressValue(data.DISH_OUT_UPWARD_POSITION_ADDRESS, data.YPositionToDistance[data.Y_DISH_OUT_HIGH_POSITION]),
 		data.NewAddressValue(data.DISH_OUT_DOWNWARD_POSITION_ADDRESS, data.YPositionToDistance[data.Y_DISH_OUT_LOW_POSITION]))
 	controller.AddAction(dishOutControlAction)
 	controller.AddInstructionInfo(data.NewInstructionInfo(string(ins.InstructionType), ins.InstructionName, 2))
-	logger.Log.Printf("[步骤]添加出菜，次数%d，上行速度%d，下行速度%d，上行位置%d，下行位置%d", 3, 400, 800,
-		data.YPositionToDistance[data.Y_DISH_OUT_HEIGH_POSITION], data.YPositionToDistance[data.Y_DISH_OUT_LOW_POSITION])
+	logger.Log.Printf("[步骤]添加出菜，次数%d，上行速度%d，下行速度%d，上行位置%d，下行位置%d",
+		data.DISH_OUT_AMOUNT, data.DISH_OUT_UPWARD_SPEED, data.DISH_OUT_DOWNWARD_SPEED,
+		data.YPositionToDistance[data.Y_DISH_OUT_HIGH_POSITION], data.YPositionToDistance[data.Y_DISH_OUT_LOW_POSITION])
 }
 
 func (ins ShakeInstruction) AddToController(controller *core.Controller) {
 	shakeControlAction := action.NewShakeControlAction(data.SHAKE_CONTROL_WORD_ADDRESS,
 		data.SHAKE_STATUS_WORD_ADDRESS,
-		data.NewAddressValue(data.SHAKE_AMOUNT_ADDRESS, 5),
-		data.NewAddressValue(data.SHAKE_UPWARD_SPEED_ADDRESS, 30000),
-		data.NewAddressValue(data.SHAKE_DOWNWARD_SPEED_ADDRESS, 20000),
-		data.NewAddressValue(data.SHAKE_DISTANCE_ADDRESS, 3200))
+		data.NewAddressValue(data.SHAKE_AMOUNT_ADDRESS, data.SHAKE_AMOUNT),
+		data.NewAddressValue(data.SHAKE_UPWARD_SPEED_ADDRESS, data.SHAKE_UPWARD_SPEED),
+		data.NewAddressValue(data.SHAKE_DOWNWARD_SPEED_ADDRESS, data.SHAKE_DOWNWARD_SPEED),
+		data.NewAddressValue(data.SHAKE_DISTANCE_ADDRESS, data.SHAKE_DISTANCE))
 	controller.AddAction(shakeControlAction)
 	controller.AddInstructionInfo(data.NewInstructionInfo(string(ins.InstructionType), ins.InstructionName, 2))
-	logger.Log.Printf("[步骤]添加抖菜，次数%d，上行速度%d，下行速度%d，抖动距离%d", 5, 30000, 20000, 3200)
+	logger.Log.Printf("[步骤]添加抖菜，次数%d，上行速度%d，下行速度%d，抖动距离%d",
+		data.SHAKE_AMOUNT, data.SHAKE_UPWARD_SPEED, data.SHAKE_DOWNWARD_SPEED, data.SHAKE_DISTANCE)
 }
 
 func (ins LampblackPurifyInstruction) AddToController(controller *core.Controller) {
@@ -259,6 +261,60 @@ func (ins DoorUnlockInstruction) AddToController(controller *core.Controller) {
 	controller.AddAction(doorUnlockControlAction)
 	controller.AddInstructionInfo(data.NewInstructionInfo(string(ins.InstructionType), ins.InstructionName, 2))
 	logger.Log.Printf("[步骤]添加打开电磁门锁")
+}
+
+func (ins InitInstruction) AddToController(controller *core.Controller) {
+	rotateControlAction := action.NewAxisRotateControlAction(data.R1_ROTATE_CONTROL_WORD_ADDRESS,
+		data.R1_ROTATE_STATUS_WORD_ADDRESS,
+		data.NewAddressValue(data.R1_ROTATE_MODE_ADDRESS, 1),
+		data.NewAddressValue(data.R1_ROTATE_SPEED_ADDRESS, 350),
+		data.NewAddressValue(data.R1_ROTATE_AMOUNT_ADDRESS, 0))
+	lampblackPurifyControlAction := action.NewLampblackPurifyControlAction(data.LAMPBLACK_PURIFY_CONTROL_WORD_ADDRESS,
+		data.LAMPBLACK_PURIFY_STATUS_WORD_ADDRESS,
+		data.NewAddressValue(data.LAMPBLACK_PURIFY_MODE_ADDRESS, data.LAMPBLACK_PURIFY_MODE))
+	delayAction := action.NewDelayAction(2000)
+	actionNumber := 3
+	controller.AddAction(rotateControlAction)
+	if data.LAMPBLACK_PURIFY_ENABLE {
+		controller.AddAction(lampblackPurifyControlAction)
+		actionNumber += 2
+	}
+	controller.AddAction(delayAction)
+	controller.AddInstructionInfo(data.NewInstructionInfo(string(ins.InstructionType), ins.InstructionName, actionNumber))
+	logger.Log.Printf("[步骤]添加转动、打开油烟净化（视机器支持情况）")
+}
+
+func (ins FinishInstruction) AddToController(controller *core.Controller) {
+	temperatureResetAction := action.NewTemperatureControlAction(data.TEMPERATURE_CONTROL_WORD_ADDRESS,
+		data.TEMPERATURE_STATUS_WORD_ADDRESS,
+		data.NewAddressValue(data.TEMPERATURE_ADDRESS, 0))
+	axisRotateControlAction := action.NewAxisRotateControlAction(data.R1_ROTATE_CONTROL_WORD_ADDRESS,
+		data.R1_ROTATE_STATUS_WORD_ADDRESS,
+		data.NewAddressValue(data.R1_ROTATE_MODE_ADDRESS, 1),
+		data.NewAddressValue(data.R1_ROTATE_SPEED_ADDRESS, 100),
+		data.NewAddressValue(data.R1_ROTATE_AMOUNT_ADDRESS, 0))
+	axisXLocateControlAction := action.NewAxisLocateControlAction(data.X_LOCATE_CONTROL_WORD_ADDRESS,
+		data.X_LOCATE_STATUS_WORD_ADDRESS,
+		data.NewAddressValue(data.X_LOCATE_POSITION_ADDRESS, data.XPositionToDistance[data.X_READY_POSITION]),
+		data.NewAddressValue(data.X_LOCATE_SPEED_ADDRESS, data.X_MOVE_SPEED))
+	delayAction := action.NewDelayAction(2000)
+	axisR1StopAction := action.NewStopAction(data.R1_ROTATE_CONTROL_WORD_ADDRESS,
+		data.R1_ROTATE_STATUS_WORD_ADDRESS)
+	lampblackPurifyStopAction := action.NewStopAction(data.LAMPBLACK_PURIFY_CONTROL_WORD_ADDRESS,
+		data.LAMPBLACK_PURIFY_STATUS_WORD_ADDRESS)
+
+	actionNumber := 9
+	controller.AddAction(temperatureResetAction)
+	controller.AddAction(axisRotateControlAction)
+	controller.AddAction(axisXLocateControlAction)
+	controller.AddAction(delayAction)
+	controller.AddAction(axisR1StopAction)
+	if data.LAMPBLACK_PURIFY_ENABLE {
+		controller.AddAction(lampblackPurifyStopAction)
+		actionNumber += 2
+	}
+	controller.AddInstructionInfo(data.NewInstructionInfo(string(ins.InstructionType), ins.InstructionName, actionNumber))
+	logger.Log.Printf("[步骤]添加转动、温控停止，X轴回备菜位，关闭油烟净化（视机器支持情况）")
 }
 
 func (ins ResetXYTInstruction) AddToController(controller *core.Controller) {
@@ -327,15 +383,15 @@ func (ins WashInstruction) AddToController(controller *core.Controller) {
 	axisRotateControlAction := action.NewAxisRotateControlAction(data.R1_ROTATE_CONTROL_WORD_ADDRESS,
 		data.R1_ROTATE_STATUS_WORD_ADDRESS,
 		data.NewAddressValue(data.R1_ROTATE_MODE_ADDRESS, 3),
-		data.NewAddressValue(data.R1_ROTATE_SPEED_ADDRESS, 1500),
-		data.NewAddressValue(data.R1_ROTATE_AMOUNT_ADDRESS, 3))
-	pumpControlAction := action.NewPumpControlAction(data.PumpNumberToPumpControlWordAddress[7],
-		data.PumpNumberToPumpStatusWordAddress[7],
-		data.NewAddressValue(data.PumpNumberToPumpDurationAddress[7], 15000))
+		data.NewAddressValue(data.R1_ROTATE_SPEED_ADDRESS, data.WASH_ROTATE_SPEED),
+		data.NewAddressValue(data.R1_ROTATE_AMOUNT_ADDRESS, data.WASH_ROTATE_CROSS_AMOUNT))
+	pumpControlAction := action.NewPumpControlAction(data.PumpNumberToPumpControlWordAddress[data.WASH_PUMP_NUMBER],
+		data.PumpNumberToPumpStatusWordAddress[data.WASH_PUMP_NUMBER],
+		data.NewAddressValue(data.PumpNumberToPumpDurationAddress[data.WASH_PUMP_NUMBER], data.WASH_ADD_WATER_DURATION))
 	temperatureControlAction := action.NewTemperatureControlAction(data.TEMPERATURE_CONTROL_WORD_ADDRESS,
 		data.TEMPERATURE_STATUS_WORD_ADDRESS,
-		data.NewAddressValue(data.TEMPERATURE_ADDRESS, 900))
-	delayAction := action.NewDelayAction(60000)
+		data.NewAddressValue(data.TEMPERATURE_ADDRESS, data.WASH_TEMPERATURE))
+	delayAction := action.NewDelayAction(data.WASH_DURATION)
 	temperatureResetAction := action.NewTemperatureControlAction(data.TEMPERATURE_CONTROL_WORD_ADDRESS,
 		data.TEMPERATURE_STATUS_WORD_ADDRESS,
 		data.NewAddressValue(data.TEMPERATURE_ADDRESS, 0))
@@ -366,7 +422,7 @@ func (ins PourInstruction) AddToController(controller *core.Controller) {
 		data.Y_LOCATE_STATUS_WORD_ADDRESS,
 		data.NewAddressValue(data.Y_LOCATE_POSITION_ADDRESS, data.YPositionToDistance[data.Y_POUR_POSITION]),
 		data.NewAddressValue(data.Y_LOCATE_SPEED_ADDRESS, data.Y_MOVE_SPEED))
-	delayAction := action.NewDelayAction(3000)
+	delayAction := action.NewDelayAction(data.WASH_POUR_WATER_DURATION)
 	axisYLocateStirFryControlAction := action.NewAxisLocateControlAction(data.Y_LOCATE_CONTROL_WORD_ADDRESS,
 		data.Y_LOCATE_STATUS_WORD_ADDRESS,
 		data.NewAddressValue(data.Y_LOCATE_POSITION_ADDRESS, data.YPositionToDistance[data.Y_STIR_FRY_3_POSITION]),

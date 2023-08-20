@@ -19,9 +19,10 @@ type TCPServer struct {
 	//RealtimeValueMap     map[string]uint32
 	RealtimeValueSyncMap *sync.Map
 
-	PauseReadChan chan bool
+	PauseReadChan  chan bool
+	PauseWriteChan chan bool
 
-	//mu sync.Mutex
+	mu sync.Mutex
 
 	debugMode bool
 }
@@ -33,8 +34,9 @@ func NewTCPServer(host string, port uint16, debugMode bool) *TCPServer {
 		//RealtimeValueMap:     make(map[string]uint32),
 		RealtimeValueSyncMap: new(sync.Map),
 
-		PauseReadChan: make(chan bool),
-		debugMode:     debugMode,
+		PauseReadChan:  make(chan bool),
+		PauseWriteChan: make(chan bool),
+		debugMode:      debugMode,
 	}
 }
 
@@ -42,8 +44,8 @@ func (t *TCPServer) Run() {
 	if t.debugMode {
 		//t.RealtimeValueMap["DD232"] = 4501
 		//t.RealtimeValueMap["DD234"] = 300
-		t.SetRealtimeValue("DD232", uint32(4510))
-		t.SetRealtimeValue("DD234", uint32(300))
+		t.SetRealtimeValue("DD2932", uint32(4510))
+		t.SetRealtimeValue("DD2934", uint32(300))
 		logger.Log.Println("TCP服务以测试模式启动，无TCP连接建立")
 		return
 	}
@@ -72,20 +74,29 @@ func (t *TCPServer) Run() {
 	for {
 		select {
 		case <-ticker.C:
-			t.Read("DS200", 120)
+			t.Read("DS2900", 120)
 			//t.Read("DS2050", 120)
-		case <-t.PauseReadChan:
-			<-t.PauseReadChan
+			//case <-t.PauseReadChan:
+			//	<-t.PauseReadChan
 		}
 	}
 	//t.Read("Dd500", 20)
 }
 
 func (t *TCPServer) Write(prefixAddress string, value uint64) {
-	t.PauseReadChan <- true
-	defer func() {
-		t.PauseReadChan <- true
-	}()
+	//select {
+	//case <-t.PauseWriteChan:
+	//	<-t.PauseWriteChan
+	//default:
+	//	break
+	//}
+	//
+	//t.PauseReadChan <- true
+	//defer func() {
+	//	t.PauseReadChan <- true
+	//}()
+	t.mu.Lock()
+	defer t.mu.Unlock()
 	transmissionIdentifier := "0422"
 	protocolIdentifier := "0000" // 协议标识符
 	salveNum := "01"
@@ -149,7 +160,7 @@ func (t *TCPServer) Write(prefixAddress string, value uint64) {
 		CMD = append(CMD, encode(valueStrLow, 2)...)
 		CMD = append(CMD, encode(valueStrHigh, 2)...)
 	}
-	//logger.Log.Println(CMD)
+	logger.Log.Printf("发送的数据：%s\n", hex.EncodeToString(CMD))
 	_, err := t.conn.Write(CMD)
 	if err != nil {
 		logger.Log.Println(err)
@@ -157,20 +168,28 @@ func (t *TCPServer) Write(prefixAddress string, value uint64) {
 	}
 
 	buffer := make([]byte, 12)
-	_, err = t.conn.Read(buffer)
-	//logger.Log.Println(string(buffer))
+	n, err := t.conn.Read(buffer)
 	if err != nil {
 		logger.Log.Printf("读取数据失败：%v\n", err)
 		return
 	}
 	// 处理接收到的数据
-	//data := buffer[:n]
-	//fmt.Printf("接收到的数据：%s\n", string(data))
-	//fmt.Println(data)
+	data := buffer[:n]
+	logger.Log.Printf("接收到的数据：%s\n", hex.EncodeToString(data))
 }
 
 // prefixAddress DD21 DS21 HD21 HS21
 func (t *TCPServer) Read(prefixAddress string, size uint64) {
+	//t.PauseWriteChan <- true
+	//defer func() {
+	//	if len(t.PauseReadChan) == 1 {
+	//		<-t.PauseReadChan
+	//	} else {
+	//		t.PauseWriteChan <- true
+	//	}
+	//}()
+	t.mu.Lock()
+	defer t.mu.Unlock()
 	transmissionIdentifier := "0422"
 	protocolIdentifier := "0000" // 协议标识符
 	salveNum := "01"

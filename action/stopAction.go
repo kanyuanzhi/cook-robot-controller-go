@@ -12,7 +12,7 @@ import (
 //		TemperatureControlAction
 //}
 
-// StopAction 停止动作，用于R1轴停转
+// StopAction 停止动作
 type StopAction struct {
 	*BaseAction
 	ControlWordAddress string // 控制字
