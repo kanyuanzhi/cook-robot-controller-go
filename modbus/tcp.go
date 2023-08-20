@@ -46,6 +46,12 @@ func (t *TCPServer) Run() {
 		//t.RealtimeValueMap["DD234"] = 300
 		t.SetRealtimeValue("DD2932", uint32(4510))
 		t.SetRealtimeValue("DD2934", uint32(300))
+		t.SetRealtimeValue("DD2986", uint32(0))
+		t.SetRealtimeValue("DD2988", uint32(0))
+		t.SetRealtimeValue("DD2990", uint32(0))
+		t.SetRealtimeValue("DD2992", uint32(0))
+		t.SetRealtimeValue("DD2994", uint32(0))
+		t.SetRealtimeValue("DD2996", uint32(0))
 		logger.Log.Println("TCP服务以测试模式启动，无TCP连接建立")
 		return
 	}
@@ -285,13 +291,13 @@ func (t *TCPServer) SetRealtimeValue(address string, value uint32) {
 func (t *TCPServer) GetRealtimeValue(address string) (uint32, bool) {
 	valueAny, has := t.RealtimeValueSyncMap.Load(address)
 	if !has {
-		logger.Log.Printf("当前RealtimeValueSyncMap中不存在%f值", address)
+		logger.Log.Printf("当前RealtimeValueSyncMap中不存在%s值", address)
 		return 0, false
 	}
 	if value, ok := valueAny.(uint32); ok {
 		return value, true
 	} else {
-		logger.Log.Printf("当前RealtimeValueSyncMap中的%f值不为uint32类型", address)
+		logger.Log.Printf("当前RealtimeValueSyncMap中的%s值不为uint32类型", address)
 		return 0, false
 	}
 }

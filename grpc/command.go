@@ -78,11 +78,23 @@ func (c *command) FetchStatus(ctx context.Context, req *pb.FetchRequest) (*pb.Fe
 		IsPausePermitted                bool                  `json:"isPausePermitted"`
 		BottomTemperature               uint32                `json:"bottomTemperature"`
 		InfraredTemperature             uint32                `json:"infraredTemperature"`
+		Pump1LiquidWarning              uint32                `json:"pump1LiquidWarning"`
+		Pump2LiquidWarning              uint32                `json:"pump2LiquidWarning"`
+		Pump3LiquidWarning              uint32                `json:"pump3LiquidWarning"`
+		Pump4LiquidWarning              uint32                `json:"pump4LiquidWarning"`
+		Pump5LiquidWarning              uint32                `json:"pump5LiquidWarning"`
+		Pump6LiquidWarning              uint32                `json:"pump6LiquidWarning"`
 		CookingTime                     int64                 `json:"cookingTime"`
 		CurrentHeatingTemperature       uint32                `json:"currentHeatingTemperature"`
 	}
 	bottomTemperature, _ := c.controller.TcpServer.GetRealtimeValue(data.TEMPERATURE_BOTTOM_ADDRESS)
 	infraredTemperature, _ := c.controller.TcpServer.GetRealtimeValue(data.TEMPERATURE_INFRARED_ADDRESS)
+	pump1LiquidWarning, _ := c.controller.TcpServer.GetRealtimeValue(data.PUMP_1_LIQUID_WARINIG)
+	pump2LiquidWarning, _ := c.controller.TcpServer.GetRealtimeValue(data.PUMP_2_LIQUID_WARINIG)
+	pump3LiquidWarning, _ := c.controller.TcpServer.GetRealtimeValue(data.PUMP_3_LIQUID_WARINIG)
+	pump4LiquidWarning, _ := c.controller.TcpServer.GetRealtimeValue(data.PUMP_4_LIQUID_WARINIG)
+	pump5LiquidWarning, _ := c.controller.TcpServer.GetRealtimeValue(data.PUMP_5_LIQUID_WARINIG)
+	pump6LiquidWarning, _ := c.controller.TcpServer.GetRealtimeValue(data.PUMP_6_LIQUID_WARINIG)
 	controllerStatus := ControllerStatus{
 		CurrentCommandName:              c.controller.CurrentCommandName,
 		CurrentDishUuid:                 c.controller.CurrentDishUuid,
@@ -95,6 +107,12 @@ func (c *command) FetchStatus(ctx context.Context, req *pb.FetchRequest) (*pb.Fe
 		IsPausePermitted:                c.controller.IsPausePermitted,
 		BottomTemperature:               bottomTemperature,
 		InfraredTemperature:             infraredTemperature,
+		Pump1LiquidWarning:              pump1LiquidWarning,
+		Pump2LiquidWarning:              pump2LiquidWarning,
+		Pump3LiquidWarning:              pump3LiquidWarning,
+		Pump4LiquidWarning:              pump4LiquidWarning,
+		Pump5LiquidWarning:              pump5LiquidWarning,
+		Pump6LiquidWarning:              pump6LiquidWarning,
 		CookingTime:                     c.controller.CookingTime,
 		CurrentHeatingTemperature:       c.controller.CurrentHeatingTemperature,
 	}
