@@ -2,7 +2,7 @@ package grpc
 
 import (
 	"cook-robot-controller-go/core"
-	pb "cook-robot-controller-go/grpc/commandRPC"
+	pb "cook-robot-controller-go/grpc/command"
 	"cook-robot-controller-go/logger"
 	"fmt"
 	"google.golang.org/grpc"

@@ -4,7 +4,7 @@ import (
 	"context"
 	"cook-robot-controller-go/core"
 	"cook-robot-controller-go/data"
-	pb "cook-robot-controller-go/grpc/commandRPC"
+	pb "cook-robot-controller-go/grpc/command"
 	"cook-robot-controller-go/instruction"
 	"cook-robot-controller-go/logger"
 	"encoding/json"

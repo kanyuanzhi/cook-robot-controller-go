@@ -166,7 +166,7 @@ func (t *TCPServer) Write(prefixAddress string, value uint64) {
 		CMD = append(CMD, encode(valueStrLow, 2)...)
 		CMD = append(CMD, encode(valueStrHigh, 2)...)
 	}
-	logger.Log.Printf("发送的数据：%s\n", hex.EncodeToString(CMD))
+	//logger.Log.Printf("发送的数据：%s\n", hex.EncodeToString(CMD))
 	_, err := t.conn.Write(CMD)
 	if err != nil {
 		logger.Log.Println(err)
@@ -174,14 +174,14 @@ func (t *TCPServer) Write(prefixAddress string, value uint64) {
 	}
 
 	buffer := make([]byte, 12)
-	n, err := t.conn.Read(buffer)
+	_, err = t.conn.Read(buffer)
 	if err != nil {
 		logger.Log.Printf("读取数据失败：%v\n", err)
 		return
 	}
 	// 处理接收到的数据
-	data := buffer[:n]
-	logger.Log.Printf("接收到的数据：%s\n", hex.EncodeToString(data))
+	//data := buffer[:n]
+	//logger.Log.Printf("接收到的数据：%s\n", hex.EncodeToString(data))
 }
 
 // prefixAddress DD21 DS21 HD21 HS21
