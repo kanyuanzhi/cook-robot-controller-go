@@ -8,6 +8,7 @@ var Parameter = &ParameterConfig{}
 
 type XAxisConfig struct {
 	MoveSpeed          uint32 `mapstructure:"moveSpeed"`
+	WithdrawerPosition uint32 `mapstructure:"withdrawerPosition"`
 	ReadyPosition      uint32 `mapstructure:"readyPosition"`
 	Box1Position       uint32 `mapstructure:"box1Position"`
 	Box2Position       uint32 `mapstructure:"box2Position"`
@@ -37,6 +38,10 @@ type YAxisConfig struct {
 	PourPosition            uint32 `mapstructure:"pourPosition"`
 }
 
+type R1AxisConfig struct {
+	MaxRotateSpeed uint32 `mapstructure:"maxRotateSpeed"`
+}
+
 type WashConfig struct {
 	RotateSpeed       uint32 `mapstructure:"rotateSpeed"`
 	RotateCrossAmount uint32 `mapstructure:"rotateCrossAmount"`
@@ -48,13 +53,17 @@ type WashConfig struct {
 }
 
 type LampblackPurify struct {
-	Enable bool   `mapstructure:"enable"`
-	Mode   uint32 `mapstructure:"mode"`
+	Enable           bool   `mapstructure:"enable"`
+	VentingMode      uint32 `mapstructure:"ventingMode"`
+	PurificationMode uint32 `mapstructure:"purificationMode"`
+	AutoStart        bool   `mapstructure:"autoStart"`
+	AutoStartMode    uint32 `mapstructure:"autoStartMode"`
 }
 
 type ParameterConfig struct {
 	XAxis           XAxisConfig     `mapstructure:"xAxis"`
 	YAxis           YAxisConfig     `mapstructure:"yAxis"`
+	R1Axis          R1AxisConfig    `mapstructure:"r1Axis"`
 	Wash            WashConfig      `mapstructure:"wash"`
 	LampblackPurify LampblackPurify `mapstructure:"lampblackPurify"`
 }

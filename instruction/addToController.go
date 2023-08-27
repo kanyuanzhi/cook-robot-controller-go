@@ -28,7 +28,7 @@ func (ins IngredientInstruction) AddToController(controller *core.Controller) {
 	slotNumber := uint32(num)
 	axisXLocateControlAction := action.NewAxisLocateControlAction(data.X_LOCATE_CONTROL_WORD_ADDRESS,
 		data.X_LOCATE_STATUS_WORD_ADDRESS,
-		data.NewAddressValue(data.X_LOCATE_POSITION_ADDRESS, data.XPositionToDistance[slotNumber]),
+		data.NewAddressValue(data.X_LOCATE_POSITION_ADDRESS, data.XPositionToDistance[data.SlotNumberToPosition[slotNumber]]),
 		data.NewAddressValue(data.X_LOCATE_SPEED_ADDRESS, data.X_MOVE_SPEED))
 	shakeControlAction := action.NewShakeControlAction(data.SHAKE_CONTROL_WORD_ADDRESS,
 		data.SHAKE_STATUS_WORD_ADDRESS,
@@ -152,11 +152,11 @@ func (ins OilInstruction) AddToController(controller *core.Controller) {
 }
 
 func (ins StirFryInstruction) AddToController(controller *core.Controller) {
-	speedValue := ins.Gear * 350
+	speed := ins.Gear * data.R1_MAX_ROTATE_SPEED / 5
 	axleRotateControlAction := action.NewAxisRotateControlAction(data.R1_ROTATE_CONTROL_WORD_ADDRESS,
 		data.R1_ROTATE_STATUS_WORD_ADDRESS,
 		data.NewAddressValue(data.R1_ROTATE_MODE_ADDRESS, 1),
-		data.NewAddressValue(data.R1_ROTATE_SPEED_ADDRESS, speedValue),
+		data.NewAddressValue(data.R1_ROTATE_SPEED_ADDRESS, speed),
 		data.NewAddressValue(data.R1_ROTATE_AMOUNT_ADDRESS, 0))
 	axisYLocateControlAction := action.NewAxisLocateControlAction(data.Y_LOCATE_CONTROL_WORD_ADDRESS,
 		data.Y_LOCATE_STATUS_WORD_ADDRESS,
@@ -170,7 +170,7 @@ func (ins StirFryInstruction) AddToController(controller *core.Controller) {
 	controller.AddAction(axisYLocateControlAction)
 	controller.AddAction(delayAction)
 	controller.AddInstructionInfo(data.NewInstructionInfo(string(ins.InstructionType), ins.InstructionName, 5))
-	logger.Log.Printf("[步骤]添加翻炒，%d号档位（转速%d）持续%d秒", ins.Gear, speedValue, ins.Duration)
+	logger.Log.Printf("[步骤]添加翻炒，%d号档位（转速%d）持续%d秒", ins.Gear, speed, ins.Duration)
 }
 
 func (ins HeatInstruction) AddToController(controller *core.Controller) {
@@ -267,11 +267,11 @@ func (ins InitInstruction) AddToController(controller *core.Controller) {
 	rotateControlAction := action.NewAxisRotateControlAction(data.R1_ROTATE_CONTROL_WORD_ADDRESS,
 		data.R1_ROTATE_STATUS_WORD_ADDRESS,
 		data.NewAddressValue(data.R1_ROTATE_MODE_ADDRESS, 1),
-		data.NewAddressValue(data.R1_ROTATE_SPEED_ADDRESS, 350),
+		data.NewAddressValue(data.R1_ROTATE_SPEED_ADDRESS, data.R1_MAX_ROTATE_SPEED/5), // 炒菜启动前R1轴自动以1档转动
 		data.NewAddressValue(data.R1_ROTATE_AMOUNT_ADDRESS, 0))
 	lampblackPurifyControlAction := action.NewLampblackPurifyControlAction(data.LAMPBLACK_PURIFY_CONTROL_WORD_ADDRESS,
 		data.LAMPBLACK_PURIFY_STATUS_WORD_ADDRESS,
-		data.NewAddressValue(data.LAMPBLACK_PURIFY_MODE_ADDRESS, data.LAMPBLACK_PURIFY_MODE))
+		data.NewAddressValue(data.LAMPBLACK_PURIFY_MODE_ADDRESS, data.LAMPBLACK_PURIFY_PURIFICATION_MODE))
 	delayAction := action.NewDelayAction(2000)
 	actionNumber := 3
 	controller.AddAction(rotateControlAction)
@@ -281,7 +281,7 @@ func (ins InitInstruction) AddToController(controller *core.Controller) {
 	}
 	controller.AddAction(delayAction)
 	controller.AddInstructionInfo(data.NewInstructionInfo(string(ins.InstructionType), ins.InstructionName, actionNumber))
-	logger.Log.Printf("[步骤]添加转动、打开油烟净化（视机器支持情况）")
+	logger.Log.Printf("[步骤]添加转动，油烟净化设置为模式%d（视机器支持情况）", data.LAMPBLACK_PURIFY_PURIFICATION_MODE)
 }
 
 func (ins FinishInstruction) AddToController(controller *core.Controller) {
@@ -300,8 +300,16 @@ func (ins FinishInstruction) AddToController(controller *core.Controller) {
 	delayAction := action.NewDelayAction(2000)
 	axisR1StopAction := action.NewStopAction(data.R1_ROTATE_CONTROL_WORD_ADDRESS,
 		data.R1_ROTATE_STATUS_WORD_ADDRESS)
-	lampblackPurifyStopAction := action.NewStopAction(data.LAMPBLACK_PURIFY_CONTROL_WORD_ADDRESS,
-		data.LAMPBLACK_PURIFY_STATUS_WORD_ADDRESS)
+
+	var lampblackPurifyControlAction action.Actioner
+	if data.LAMPBLACK_PURIFY_AUTO_START {
+		lampblackPurifyControlAction = action.NewLampblackPurifyControlAction(data.LAMPBLACK_PURIFY_CONTROL_WORD_ADDRESS,
+			data.LAMPBLACK_PURIFY_STATUS_WORD_ADDRESS,
+			data.NewAddressValue(data.LAMPBLACK_PURIFY_MODE_ADDRESS, data.LAMPBLACK_PURIFY_VENTING_MODE))
+	} else {
+		lampblackPurifyControlAction = action.NewStopAction(data.LAMPBLACK_PURIFY_CONTROL_WORD_ADDRESS,
+			data.LAMPBLACK_PURIFY_STATUS_WORD_ADDRESS)
+	}
 
 	actionNumber := 9
 	controller.AddAction(temperatureResetAction)
@@ -310,11 +318,11 @@ func (ins FinishInstruction) AddToController(controller *core.Controller) {
 	controller.AddAction(delayAction)
 	controller.AddAction(axisR1StopAction)
 	if data.LAMPBLACK_PURIFY_ENABLE {
-		controller.AddAction(lampblackPurifyStopAction)
+		controller.AddAction(lampblackPurifyControlAction)
 		actionNumber += 2
 	}
 	controller.AddInstructionInfo(data.NewInstructionInfo(string(ins.InstructionType), ins.InstructionName, actionNumber))
-	logger.Log.Printf("[步骤]添加转动、温控停止，X轴回备菜位，关闭油烟净化（视机器支持情况）")
+	logger.Log.Printf("[步骤]添加转动、温控停止，X轴回备菜位，油烟净化设置为模式%d（视机器支持情况）", data.LAMPBLACK_PURIFY_VENTING_MODE)
 }
 
 func (ins ResetXYTInstruction) AddToController(controller *core.Controller) {
@@ -376,6 +384,10 @@ func (ins PrepareInstruction) AddToController(controller *core.Controller) {
 }
 
 func (ins WashInstruction) AddToController(controller *core.Controller) {
+	axisXLocateControlAction := action.NewAxisLocateControlAction(data.X_LOCATE_CONTROL_WORD_ADDRESS,
+		data.X_LOCATE_STATUS_WORD_ADDRESS,
+		data.NewAddressValue(data.X_LOCATE_POSITION_ADDRESS, data.XPositionToDistance[data.X_WITHDRAWER_POSITION]),
+		data.NewAddressValue(data.X_LOCATE_SPEED_ADDRESS, data.X_MOVE_SPEED))
 	axisYLocateControlAction := action.NewAxisLocateControlAction(data.Y_LOCATE_CONTROL_WORD_ADDRESS,
 		data.Y_LOCATE_STATUS_WORD_ADDRESS,
 		data.NewAddressValue(data.Y_LOCATE_POSITION_ADDRESS, data.YPositionToDistance[data.Y_WASH_POSITION]),
@@ -404,6 +416,7 @@ func (ins WashInstruction) AddToController(controller *core.Controller) {
 	axisR1StopAction := action.NewStopAction(data.R1_ROTATE_CONTROL_WORD_ADDRESS,
 		data.R1_ROTATE_STATUS_WORD_ADDRESS)
 
+	controller.AddAction(axisXLocateControlAction)
 	controller.AddAction(axisYLocateControlAction)
 	controller.AddAction(axisRotateControlAction)
 	controller.AddAction(pumpControlAction)
@@ -413,7 +426,7 @@ func (ins WashInstruction) AddToController(controller *core.Controller) {
 	controller.AddAction(slowAxisRotateControlAction)
 	controller.AddAction(slowDelayAction)
 	controller.AddAction(axisR1StopAction)
-	controller.AddInstructionInfo(data.NewInstructionInfo(string(ins.InstructionType), ins.InstructionName, 16))
+	controller.AddInstructionInfo(data.NewInstructionInfo(string(ins.InstructionType), ins.InstructionName, 18))
 	logger.Log.Printf("[步骤]添加洗锅")
 }
 
@@ -440,6 +453,17 @@ func (ins DelayInstruction) AddToController(controller *core.Controller) {
 	controller.AddAction(delayAction)
 	controller.AddInstructionInfo(data.NewInstructionInfo(string(ins.InstructionType), ins.InstructionName, 1))
 	logger.Log.Printf("[步骤]延时%d秒")
+}
+
+func (ins WithdrawInstruction) AddToController(controller *core.Controller) {
+	axisXLocateControlAction := action.NewAxisLocateControlAction(data.X_LOCATE_CONTROL_WORD_ADDRESS,
+		data.X_LOCATE_STATUS_WORD_ADDRESS,
+		data.NewAddressValue(data.X_LOCATE_POSITION_ADDRESS, data.XPositionToDistance[data.X_WITHDRAWER_POSITION]),
+		data.NewAddressValue(data.X_LOCATE_SPEED_ADDRESS, data.X_MOVE_SPEED))
+
+	controller.AddAction(axisXLocateControlAction)
+	controller.AddInstructionInfo(data.NewInstructionInfo(string(ins.InstructionType), ins.InstructionName, 2))
+	logger.Log.Printf("[步骤]添加X轴定位到收纳位")
 }
 
 // straight instruction

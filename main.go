@@ -14,7 +14,6 @@ func main() {
 	tcpServer := modbus.NewTCPServer(config.App.Modbus.TargetHost, config.App.Modbus.TargetPort, config.App.DebugMode)
 	go tcpServer.Run()
 
-	//
 	writer := operator.NewWriter(tcpServer)
 	reader := operator.NewReader(tcpServer)
 	controller := core.NewController(writer, reader, tcpServer, config.App.DebugMode)
@@ -25,9 +24,14 @@ func main() {
 
 	time.Sleep(500 * time.Millisecond)
 
+	// 开机自动启动油烟净化
+	if config.Parameter.LampblackPurify.Enable && config.Parameter.LampblackPurify.AutoStart {
+		lampblackPurifyInstruction := instruction.NewLampblackPurifyInstruction(config.Parameter.LampblackPurify.AutoStartMode)
+		lampblackPurifyInstruction.AddToController(controller)
+	}
 	resetXYTInstruction := instruction.NewResetXYTInstruction()
-	controller.CurrentCommandName = "reset"
 	resetXYTInstruction.AddToController(controller)
+	controller.CurrentCommandName = "reset"
 	go controller.Start()
 	//
 	//delayAction1 := action.NewDelayAction(1000)

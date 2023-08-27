@@ -9,6 +9,8 @@ const (
 	COMMAND_NAME_RESUME       = "resume"       // single
 	COMMAND_NAME_PAUSE_TO_ADD = "pause_to_add" // single
 	COMMAND_NAME_HEAT         = "heat"         // single
+	COMMAND_NAME_WITHDRAW     = "withdraw"     // multiple
+
 )
 
 const (

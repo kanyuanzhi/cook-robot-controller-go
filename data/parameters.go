@@ -5,21 +5,30 @@ import "cook-robot-controller-go/config"
 var X_MOVE_SPEED = config.Parameter.XAxis.MoveSpeed
 
 const (
-	X_BOX_1_POSITION uint32 = iota + 1
+	X_READY_POSITION uint32 = iota + 1
+	X_WITHDRAWER_POSITION
+	X_BOX_1_POSITION
 	X_BOX_2_POSITION
 	X_BOX_3_POSITION
 	X_BOX_4_POSITION
-	X_READY_POSITION
 	X_SAFE_POSITION
 )
 
+var SlotNumberToPosition = map[uint32]uint32{
+	1: X_BOX_1_POSITION,
+	2: X_BOX_2_POSITION,
+	3: X_BOX_3_POSITION,
+	4: X_BOX_4_POSITION,
+}
+
 var XPositionToDistance = map[uint32]uint32{
-	X_READY_POSITION: config.Parameter.XAxis.ReadyPosition, // 上菜位
-	X_BOX_1_POSITION: config.Parameter.XAxis.Box1Position,  // 菜仓1位
-	X_BOX_2_POSITION: config.Parameter.XAxis.Box2Position,  // 菜仓2位
-	X_BOX_3_POSITION: config.Parameter.XAxis.Box3Position,  // 菜仓3位
-	X_BOX_4_POSITION: config.Parameter.XAxis.Box4Position,  // 菜仓4位
-	X_SAFE_POSITION:  config.Parameter.XAxis.SafePosition,  // 菜仓4位
+	X_READY_POSITION:      config.Parameter.XAxis.ReadyPosition,      // 上菜位
+	X_WITHDRAWER_POSITION: config.Parameter.XAxis.WithdrawerPosition, // 收纳位
+	X_BOX_1_POSITION:      config.Parameter.XAxis.Box1Position,       // 菜仓1位
+	X_BOX_2_POSITION:      config.Parameter.XAxis.Box2Position,       // 菜仓2位
+	X_BOX_3_POSITION:      config.Parameter.XAxis.Box3Position,       // 菜仓3位
+	X_BOX_4_POSITION:      config.Parameter.XAxis.Box4Position,       // 菜仓4位
+	X_SAFE_POSITION:       config.Parameter.XAxis.SafePosition,       // 安全位
 }
 
 var SHAKE_AMOUNT = config.Parameter.XAxis.ShakeAmount
@@ -55,6 +64,8 @@ var YPositionToDistance = map[uint32]uint32{
 	Y_DISH_OUT_LOW_POSITION:     config.Parameter.YAxis.DishOutLowPosition,      // 出菜低位
 }
 
+var R1_MAX_ROTATE_SPEED = config.Parameter.R1Axis.MaxRotateSpeed
+
 var DISH_OUT_AMOUNT = config.Parameter.YAxis.DishOutAmount
 var DISH_OUT_UPWARD_SPEED = config.Parameter.YAxis.DishOutUpwardSpeed
 var DISH_OUT_DOWNWARD_SPEED = config.Parameter.YAxis.DishOutDownwardSpeed
@@ -68,4 +79,7 @@ var WASH_PUMP_NUMBER = config.Parameter.Wash.PumpNumber
 var WASH_POUR_WATER_DURATION = config.Parameter.Wash.PourWaterDuration
 
 var LAMPBLACK_PURIFY_ENABLE = config.Parameter.LampblackPurify.Enable
-var LAMPBLACK_PURIFY_MODE = config.Parameter.LampblackPurify.Mode
+var LAMPBLACK_PURIFY_VENTING_MODE = config.Parameter.LampblackPurify.VentingMode
+var LAMPBLACK_PURIFY_PURIFICATION_MODE = config.Parameter.LampblackPurify.PurificationMode
+var LAMPBLACK_PURIFY_AUTO_START = config.Parameter.LampblackPurify.AutoStart
+var LAMPBLACK_PURIFY_AUTO_START_MODE = config.Parameter.LampblackPurify.AutoStartMode

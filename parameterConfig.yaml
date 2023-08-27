@@ -1,5 +1,6 @@
 xAxis: #X轴
   moveSpeed: 20000 #定位速度
+  withdrawerPosition: 90000 #收纳位
   readyPosition: 54396 #上菜位
   box1Position: 42690 #菜仓1位
   box2Position: 25937 #菜仓2位
@@ -27,6 +28,9 @@ yAxis: #Y轴
   dishOutUpwardSpeed: 600 #出菜上行速度
   dishOutDownwardSpeed: 2200 #出菜下行次数
 
+r1Axis: #R1轴
+  maxRotateSpeed: 1650 #最大转速，分为5档，按比例依次分配格挡转速
+
 wash: #洗锅
   rotateSpeed: 1500 #R1轴转速
   rotateCrossAmount: 3 #R1轴正反转圈数
@@ -37,8 +41,11 @@ wash: #洗锅
   pourWaterDuration: 4000 #倒水停留时长
 
 lampblackPurify: #油烟净化
-  enable: true # 是否支持油烟净化
-  mode: 2 #油烟净化模式，1:排气，2:排气+净化
+  enable: true #是否支持油烟净化（当机器不支持时需要设置为false）
+  ventingMode: 1 #排气模式记号
+  purificationMode: 2 #排气+净化模式记号
+  autoStart: true #是否自动启动油烟净化
+  autoStartMode: 1 #自动启动油烟净化时的模式
 
 
 
