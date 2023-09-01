@@ -13,6 +13,10 @@ require (
 require (
 	github.com/fsnotify/fsnotify v1.6.0 // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
+	github.com/gookit/color v1.5.4 // indirect
+	github.com/gookit/goutil v0.6.12 // indirect
+	github.com/gookit/gsr v0.1.0 // indirect
+	github.com/gookit/slog v0.5.4 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/magiconair/properties v1.8.7 // indirect
 	github.com/pelletier/go-toml/v2 v2.0.8 // indirect
@@ -21,9 +25,12 @@ require (
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/subosito/gotenv v1.4.2 // indirect
+	github.com/valyala/bytebufferpool v1.0.0 // indirect
+	github.com/xo/terminfo v0.0.0-20220910002029-abceb7e1c41e // indirect
 	golang.org/x/net v0.11.0 // indirect
-	golang.org/x/sys v0.9.0 // indirect
-	golang.org/x/text v0.10.0 // indirect
+	golang.org/x/sync v0.3.0 // indirect
+	golang.org/x/sys v0.10.0 // indirect
+	golang.org/x/text v0.11.0 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20230629202037-9506855d4529 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
