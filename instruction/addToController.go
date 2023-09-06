@@ -311,12 +311,13 @@ func (ins FinishInstruction) AddToController(controller *core.Controller) {
 			data.LAMPBLACK_PURIFY_STATUS_WORD_ADDRESS)
 	}
 
-	actionNumber := 9
+	actionNumber := 11
 	controller.AddAction(temperatureResetAction)
 	controller.AddAction(axisRotateControlAction)
 	controller.AddAction(axisXLocateControlAction)
 	controller.AddAction(delayAction)
 	controller.AddAction(axisR1StopAction)
+	controller.AddAction(temperatureResetAction) // 最后再次添加一次温控停止，确保温控停止
 	if data.LAMPBLACK_PURIFY_ENABLE {
 		controller.AddAction(lampblackPurifyControlAction)
 		actionNumber += 2
