@@ -31,7 +31,8 @@ func (c *command) Execute(ctx context.Context, req *pb.CommandRequest) (*pb.Comm
 			c.controller.CurrentCommandName = commandMap["commandName"].(string)
 			if commandMap["commandName"].(string) == "cook" {
 				c.controller.IsCooking = true
-				c.controller.CurrentDishUuid = commandMap["dishUuid"].(string)
+				c.controller.CurrentDishUUID = commandMap["dishUUID"].(string)
+				c.controller.CurrentDishCustomStepUUID = commandMap["customStepsUUID"].(string)
 			}
 			for _, ins := range commandMap["instructions"].([]interface{}) {
 				//logger.Log.Println(ins.(map[string]interface{}))
@@ -67,7 +68,8 @@ func (c *command) Execute(ctx context.Context, req *pb.CommandRequest) (*pb.Comm
 func (c *command) FetchStatus(ctx context.Context, req *pb.FetchRequest) (*pb.FetchResponse, error) {
 	type ControllerStatus struct {
 		CurrentCommandName              string                `json:"currentCommandName"`
-		CurrentDishUuid                 string                `json:"currentDishUuid"`
+		CurrentDishUUID                 string                `json:"currentDishUUID"`
+		CurrentDishCustomStepsUUID      string                `json:"currentDishCustomStepsUUID"`
 		CurrentInstructionName          string                `json:"currentInstructionName"`
 		CurrentInstructionInfo          *data.InstructionInfo `json:"currentInstructionInfo"`
 		IsPausing                       bool                  `json:"isPausing"`
@@ -97,7 +99,8 @@ func (c *command) FetchStatus(ctx context.Context, req *pb.FetchRequest) (*pb.Fe
 	pump6LiquidWarning, _ := c.controller.TcpServer.GetRealtimeValue(data.PUMP_6_LIQUID_WARINIG)
 	controllerStatus := ControllerStatus{
 		CurrentCommandName:              c.controller.CurrentCommandName,
-		CurrentDishUuid:                 c.controller.CurrentDishUuid,
+		CurrentDishUUID:                 c.controller.CurrentDishUUID,
+		CurrentDishCustomStepsUUID:      c.controller.CurrentDishCustomStepUUID,
 		CurrentInstructionInfo:          c.controller.CurrentInstructionInfo,
 		IsPausing:                       c.controller.IsPausing,
 		IsRunning:                       c.controller.IsRunning,

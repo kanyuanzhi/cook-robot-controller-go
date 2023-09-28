@@ -22,8 +22,9 @@ type Controller struct {
 
 	pauseChan chan bool
 
-	CurrentCommandName string // 当前命令名称 cook|wash|prepare|...
-	CurrentDishUuid    string // 当前正在炒制菜品的uuid
+	CurrentCommandName        string // 当前命令名称 cook|wash|prepare|...
+	CurrentDishUUID           string // 当前正在炒制菜品的uuid
+	CurrentDishCustomStepUUID string // 当前正在炒制菜品某口味的uuid，无则为空
 
 	InstructionInfoChan    chan *data.InstructionInfo // 等待运行的指令队列，每个指令包含若干动作
 	CurrentInstructionInfo *data.InstructionInfo      // 当前在运行的指令
@@ -64,7 +65,8 @@ func NewController(writer *operator.Writer, reader *operator.Reader, tcpServer *
 		executedActionFlagChan:          make(chan bool, maxActionNumber),
 		pauseChan:                       make(chan bool),
 		CurrentCommandName:              "",
-		CurrentDishUuid:                 "",
+		CurrentDishUUID:                 "",
+		CurrentDishCustomStepUUID:       "",
 		InstructionInfoChan:             make(chan *data.InstructionInfo, maxInstructionNumber),
 		CurrentInstructionInfo:          &data.InstructionInfo{},
 		InstructionFlagChan:             make(chan bool, maxActionNumber),
@@ -230,7 +232,8 @@ func (c *Controller) Stop() {
 
 	c.waitingActionChan = make(chan action.Actioner, c.MaxActionNumber)
 	c.CurrentCommandName = ""
-	c.CurrentDishUuid = ""
+	c.CurrentDishUUID = ""
+	c.CurrentDishCustomStepUUID = ""
 
 	c.IsRunning = false
 	c.IsCooking = false
