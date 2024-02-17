@@ -37,6 +37,15 @@ const (
 	WITHDRAW         = InstructionType("withdrawer")
 	SHUTDOWN         = InstructionType("shutdown")
 
+	OPEN_WATER_SOURCE_VALVE  = InstructionType("open_water_source_valve")
+	CLOSE_WATER_SOURCE_VALVE = InstructionType("close_water_source_valve")
+	OPEN_WATER_PUMP_VALVE    = InstructionType("open_water_pump_valve")
+	CLOSE_WATER_PUMP_VALVE   = InstructionType("close_water_pump_valve")
+	OPEN_NOZZLE_VALVE        = InstructionType("open_nozzle_valve")
+	CLOSE_NOZZLE_VALVE       = InstructionType("close_nozzle_valve")
+	OPEN_PUMP_7_VALVE        = InstructionType("open_pump_7_valve")
+	CLOSE_PUMP_7_VALVE       = InstructionType("close_pump_7_valve")
+
 	AXIS   = InstructionType("axis")
 	ROTATE = InstructionType("rotate")
 	PUMP   = InstructionType("pump")
@@ -343,6 +352,86 @@ func NewShutdownInstruction() *ShutdownInstruction {
 	}
 }
 
+type OpenWaterSourceValveInstruction struct {
+	Instruction `mapstructure:",squash"`
+}
+
+func NewOpenWaterSourceValveInstruction() *OpenWaterSourceValveInstruction {
+	return &OpenWaterSourceValveInstruction{
+		Instruction: NewInstruction(OPEN_WATER_SOURCE_VALVE),
+	}
+}
+
+type CloseWaterSourceValveInstruction struct {
+	Instruction `mapstructure:",squash"`
+}
+
+func NewCloseWaterSourceValveInstruction() *CloseWaterSourceValveInstruction {
+	return &CloseWaterSourceValveInstruction{
+		Instruction: NewInstruction(CLOSE_WATER_SOURCE_VALVE),
+	}
+}
+
+type OpenWaterPumpValveInstruction struct {
+	Instruction `mapstructure:",squash"`
+}
+
+func NewOpenWaterPumpValveInstruction() *OpenWaterPumpValveInstruction {
+	return &OpenWaterPumpValveInstruction{
+		Instruction: NewInstruction(OPEN_WATER_PUMP_VALVE),
+	}
+}
+
+type CloseWaterPumpValveInstruction struct {
+	Instruction `mapstructure:",squash"`
+}
+
+func NewCloseWaterPumpValveInstruction() *CloseWaterPumpValveInstruction {
+	return &CloseWaterPumpValveInstruction{
+		Instruction: NewInstruction(CLOSE_WATER_PUMP_VALVE),
+	}
+}
+
+type OpenNozzleValveInstruction struct {
+	Instruction `mapstructure:",squash"`
+}
+
+func NewOpenNozzleValveInstruction() *OpenNozzleValveInstruction {
+	return &OpenNozzleValveInstruction{
+		Instruction: NewInstruction(OPEN_NOZZLE_VALVE),
+	}
+}
+
+type CloseNozzleValveInstruction struct {
+	Instruction `mapstructure:",squash"`
+}
+
+func NewCloseNozzleValveInstruction() *CloseNozzleValveInstruction {
+	return &CloseNozzleValveInstruction{
+		Instruction: NewInstruction(CLOSE_NOZZLE_VALVE),
+	}
+}
+
+type OpenPump7ValveInstruction struct {
+	Instruction `mapstructure:",squash"`
+}
+
+func NewOpenPump7ValveInstruction() *OpenPump7ValveInstruction {
+	return &OpenPump7ValveInstruction{
+		Instruction: NewInstruction(OPEN_PUMP_7_VALVE),
+	}
+}
+
+type ClosePump7ValveInstruction struct {
+	Instruction `mapstructure:",squash"`
+}
+
+func NewClosePump7ValveInstruction() *ClosePump7ValveInstruction {
+	return &ClosePump7ValveInstruction{
+		Instruction: NewInstruction(CLOSE_PUMP_7_VALVE),
+	}
+}
+
 var InstructionTypeToStruct = map[InstructionType]Instructioner{
 	INGREDIENT:       IngredientInstruction{},
 	SEASONING:        SeasoningInstruction{},
@@ -366,6 +455,15 @@ var InstructionTypeToStruct = map[InstructionType]Instructioner{
 	PAUSE_TO_ADD:     PauseToAddInstruction{},
 	WITHDRAW:         WithdrawInstruction{},
 	SHUTDOWN:         ShutdownInstruction{},
+
+	OPEN_WATER_SOURCE_VALVE:  OpenWaterSourceValveInstruction{},
+	CLOSE_WATER_SOURCE_VALVE: CloseWaterSourceValveInstruction{},
+	OPEN_WATER_PUMP_VALVE:    OpenWaterPumpValveInstruction{},
+	CLOSE_WATER_PUMP_VALVE:   CloseWaterPumpValveInstruction{},
+	OPEN_NOZZLE_VALVE:        OpenNozzleValveInstruction{},
+	CLOSE_NOZZLE_VALVE:       CloseNozzleValveInstruction{},
+	OPEN_PUMP_7_VALVE:        OpenPump7ValveInstruction{},
+	CLOSE_PUMP_7_VALVE:       ClosePump7ValveInstruction{},
 
 	AXIS:   AxisInstruction{},
 	ROTATE: RotateInstruction{},

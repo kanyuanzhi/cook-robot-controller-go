@@ -164,3 +164,43 @@ func (r ShutdownInstruction) ExecuteImmediately(controller *core.Controller) {
 	//}()
 
 }
+
+func (ins OpenWaterSourceValveInstruction) ExecuteImmediately(controller *core.Controller) {
+	openAction := action.NewWaterSourceValveControlAction(data.WATER_SOURCE_VALVE_CONTROL_WORD_ADDRESS, data.WATER_SOURCE_VALVE_STATUS_WORD_ADDRESS)
+	controller.ExecuteImmediately(openAction)
+}
+
+func (ins CloseWaterSourceValveInstruction) ExecuteImmediately(controller *core.Controller) {
+	stopAction := action.NewStopAction(data.WATER_SOURCE_VALVE_CONTROL_WORD_ADDRESS, data.WATER_SOURCE_VALVE_STATUS_WORD_ADDRESS)
+	controller.ExecuteImmediately(stopAction)
+}
+
+func (ins OpenWaterPumpValveInstruction) ExecuteImmediately(controller *core.Controller) {
+	openAction := action.NewWaterPumpValveControlAction(data.WATER_PUMP_VALVE_CONTROL_WORD_ADDRESS, data.WATER_PUMP_VALVE_STATUS_WORD_ADDRESS)
+	controller.ExecuteImmediately(openAction)
+}
+
+func (ins CloseWaterPumpValveInstruction) ExecuteImmediately(controller *core.Controller) {
+	stopAction := action.NewStopAction(data.WATER_PUMP_VALVE_CONTROL_WORD_ADDRESS, data.WATER_PUMP_VALVE_STATUS_WORD_ADDRESS)
+	controller.ExecuteImmediately(stopAction)
+}
+
+func (ins OpenNozzleValveInstruction) ExecuteImmediately(controller *core.Controller) {
+	openAction := action.NewNozzleValveControlAction(data.NOZZLE_VALVE_CONTROL_WORD_ADDRESS, data.WATER_SOURCE_VALVE_STATUS_WORD_ADDRESS)
+	controller.ExecuteImmediately(openAction)
+}
+
+func (ins CloseNozzleValveInstruction) ExecuteImmediately(controller *core.Controller) {
+	stopAction := action.NewStopAction(data.NOZZLE_VALVE_CONTROL_WORD_ADDRESS, data.WATER_SOURCE_VALVE_STATUS_WORD_ADDRESS)
+	controller.ExecuteImmediately(stopAction)
+}
+
+func (ins OpenPump7ValveInstruction) ExecuteImmediately(controller *core.Controller) {
+	openAction := action.NewNozzleValveControlAction(data.PUMP_7_CONTROL_WORD_ADDRESS, data.PUMP_7_STATUS_WORD_ADDRESS)
+	controller.ExecuteImmediately(openAction)
+}
+
+func (ins ClosePump7ValveInstruction) ExecuteImmediately(controller *core.Controller) {
+	stopAction := action.NewStopAction(data.PUMP_7_CONTROL_WORD_ADDRESS, data.PUMP_7_STATUS_WORD_ADDRESS)
+	controller.ExecuteImmediately(stopAction)
+}

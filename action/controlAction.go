@@ -364,3 +364,83 @@ func (c *TemperatureControlAction) AfterExecuteInfo() string {
 		c.TargetTemperature.Address, c.TargetTemperature.Value,
 		c.StatusWordAddress)
 }
+
+// WaterSourceValveControlAction 水源阀动作
+type WaterSourceValveControlAction struct {
+	*ControlAction
+}
+
+func NewWaterSourceValveControlAction(controlWordAddress string, statusWordAddress string) *WaterSourceValveControlAction {
+	waterSourceValveControlAction := &WaterSourceValveControlAction{
+		ControlAction: NewControlAction(controlWordAddress, statusWordAddress),
+	}
+	return waterSourceValveControlAction
+}
+
+func (action *WaterSourceValveControlAction) BeforeExecuteInfo() string {
+	return fmt.Sprintf("[开始]打开水源阀,发送(%s,%d),状态字地址%s", action.ControlWordAddress, 1, action.StatusWordAddress)
+}
+
+func (action *WaterSourceValveControlAction) AfterExecuteInfo() string {
+	return fmt.Sprintf("[结束]打开水源阀,发送(%s,%d),状态字地址%s", action.ControlWordAddress, 1, action.StatusWordAddress)
+}
+
+// WaterPumpValveControlAction 水源阀动作
+type WaterPumpValveControlAction struct {
+	*ControlAction
+}
+
+func NewWaterPumpValveControlAction(controlWordAddress string, statusWordAddress string) *WaterPumpValveControlAction {
+	waterPumpValveControlAction := &WaterPumpValveControlAction{
+		ControlAction: NewControlAction(controlWordAddress, statusWordAddress),
+	}
+	return waterPumpValveControlAction
+}
+
+func (action *WaterPumpValveControlAction) BeforeExecuteInfo() string {
+	return fmt.Sprintf("[开始]打开水泵阀,发送(%s,%d),状态字地址%s", action.ControlWordAddress, 1, action.StatusWordAddress)
+}
+
+func (action *WaterPumpValveControlAction) AfterExecuteInfo() string {
+	return fmt.Sprintf("[结束]打开水泵阀,发送(%s,%d),状态字地址%s", action.ControlWordAddress, 1, action.StatusWordAddress)
+}
+
+// NozzleValveControlAction 喷头阀动作
+type NozzleValveControlAction struct {
+	*ControlAction
+}
+
+func NewNozzleValveControlAction(controlWordAddress string, statusWordAddress string) *NozzleValveControlAction {
+	nozzleValveControlAction := &NozzleValveControlAction{
+		ControlAction: NewControlAction(controlWordAddress, statusWordAddress),
+	}
+	return nozzleValveControlAction
+}
+
+func (action *NozzleValveControlAction) BeforeExecuteInfo() string {
+	return fmt.Sprintf("[开始]打开喷头阀,发送(%s,%d),状态字地址%s", action.ControlWordAddress, 1, action.StatusWordAddress)
+}
+
+func (action *NozzleValveControlAction) AfterExecuteInfo() string {
+	return fmt.Sprintf("[结束]打开喷头阀,发送(%s,%d),状态字地址%s", action.ControlWordAddress, 1, action.StatusWordAddress)
+}
+
+// WashPumpValveControlAction 水泵阀动作，7号泵，单控不设时间
+type WashPumpValveControlAction struct {
+	*ControlAction
+}
+
+func NewWashPumpValveControlAction(controlWordAddress string, statusWordAddress string) *WashPumpValveControlAction {
+	washPumpValveControlAction := &WashPumpValveControlAction{
+		ControlAction: NewControlAction(controlWordAddress, statusWordAddress),
+	}
+	return washPumpValveControlAction
+}
+
+func (action *WashPumpValveControlAction) BeforeExecuteInfo() string {
+	return fmt.Sprintf("[开始]打开喷头阀,发送(%s,%d),状态字地址%s", action.ControlWordAddress, 1, action.StatusWordAddress)
+}
+
+func (action *WashPumpValveControlAction) AfterExecuteInfo() string {
+	return fmt.Sprintf("[结束]打开喷头阀,发送(%s,%d),状态字地址%s", action.ControlWordAddress, 1, action.StatusWordAddress)
+}
