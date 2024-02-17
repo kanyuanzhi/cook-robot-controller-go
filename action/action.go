@@ -13,6 +13,7 @@ type Actioner interface {
 	GetControlWordAddress() string
 	Pause()
 	Resume()
+	Shutdown()
 
 	BeforeExecuteInfo() string
 	AfterExecuteInfo() string
@@ -64,6 +65,10 @@ func (b *BaseAction) Pause() {
 }
 
 func (b *BaseAction) Resume() {
+	return
+}
+
+func (b *BaseAction) Shutdown() {
 	return
 }
 

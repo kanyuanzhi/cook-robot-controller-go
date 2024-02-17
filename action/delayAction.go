@@ -13,14 +13,17 @@ type DelayAction struct {
 
 	pauseChan  chan bool
 	resumeChan chan bool
+
+	shutdownChan chan bool
 }
 
 func NewDelayAction(delay uint32) *DelayAction {
 	return &DelayAction{
-		BaseAction: newBaseAction(DELAY),
-		Delay:      delay,
-		pauseChan:  make(chan bool),
-		resumeChan: make(chan bool),
+		BaseAction:   newBaseAction(DELAY),
+		Delay:        delay,
+		pauseChan:    make(chan bool),
+		resumeChan:   make(chan bool),
+		shutdownChan: make(chan bool),
 	}
 }
 
@@ -28,7 +31,9 @@ func (d *DelayAction) Execute(writer *operator.Writer, reader *operator.Reader, 
 	delayTime := d.Delay
 	timer := time.NewTimer(time.Duration(delayTime) * time.Millisecond)
 	beginTime := time.Now()
-	defer timer.Stop()
+	defer func() {
+		timer.Stop()
+	}()
 	exitFlag := false
 	var remainingTime uint32
 	for {
@@ -36,7 +41,7 @@ func (d *DelayAction) Execute(writer *operator.Writer, reader *operator.Reader, 
 		case <-timer.C:
 			//finishChan <- true
 			exitFlag = true
-		//logger.Log.Printf("延时%dms完毕", d.Delay)
+			logger.Log.Printf("延时%dms完毕", d.Delay)
 		case <-d.pauseChan:
 			if !timer.Stop() {
 				<-timer.C
@@ -49,6 +54,8 @@ func (d *DelayAction) Execute(writer *operator.Writer, reader *operator.Reader, 
 			timer.Reset(time.Duration(remainingTime) * time.Millisecond)
 			beginTime = time.Now()
 			delayTime = remainingTime
+		case <-d.shutdownChan:
+			return
 		}
 		if exitFlag {
 			break
@@ -71,4 +78,9 @@ func (d *DelayAction) BeforeExecuteInfo() string {
 
 func (d *DelayAction) AfterExecuteInfo() string {
 	return fmt.Sprintf("[结束]延时执行%.3f秒", float32(d.Delay)/1000)
+}
+
+func (d *DelayAction) Shutdown() {
+	logger.Log.Printf("[终止]延时执行%.3f秒", float32(d.Delay)/1000)
+	d.shutdownChan <- true
 }

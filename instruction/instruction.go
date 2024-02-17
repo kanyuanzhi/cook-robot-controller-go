@@ -35,6 +35,7 @@ const (
 	INIT             = InstructionType("init")
 	FINISH           = InstructionType("finish")
 	WITHDRAW         = InstructionType("withdrawer")
+	SHUTDOWN         = InstructionType("shutdown")
 
 	AXIS   = InstructionType("axis")
 	ROTATE = InstructionType("rotate")
@@ -332,6 +333,16 @@ func NewWithdrawInstruction() *WithdrawInstruction {
 	}
 }
 
+type ShutdownInstruction struct {
+	Instruction `mapstructure:",squash"`
+}
+
+func NewShutdownInstruction() *ShutdownInstruction {
+	return &ShutdownInstruction{
+		Instruction: NewInstruction(SHUTDOWN),
+	}
+}
+
 var InstructionTypeToStruct = map[InstructionType]Instructioner{
 	INGREDIENT:       IngredientInstruction{},
 	SEASONING:        SeasoningInstruction{},
@@ -354,6 +365,7 @@ var InstructionTypeToStruct = map[InstructionType]Instructioner{
 	RESUME:           ResumeInstruction{},
 	PAUSE_TO_ADD:     PauseToAddInstruction{},
 	WITHDRAW:         WithdrawInstruction{},
+	SHUTDOWN:         ShutdownInstruction{},
 
 	AXIS:   AxisInstruction{},
 	ROTATE: RotateInstruction{},

@@ -45,13 +45,13 @@ func (t *TCPServer) Run() {
 		//t.RealtimeValueMap["DD232"] = 4501
 		//t.RealtimeValueMap["DD234"] = 300
 		t.SetRealtimeValue("DD2932", uint32(4510))
-		t.SetRealtimeValue("DD2934", uint32(300))
-		t.SetRealtimeValue("DD2986", uint32(0))
-		t.SetRealtimeValue("DD2988", uint32(0))
+		t.SetRealtimeValue("DD2934", uint32(301))
+		t.SetRealtimeValue("DD2986", uint32(100))
+		t.SetRealtimeValue("DD2988", uint32(100))
 		t.SetRealtimeValue("DD2990", uint32(0))
-		t.SetRealtimeValue("DD2992", uint32(0))
-		t.SetRealtimeValue("DD2994", uint32(0))
-		t.SetRealtimeValue("DD2996", uint32(0))
+		t.SetRealtimeValue("DD2992", uint32(100))
+		t.SetRealtimeValue("DD2994", uint32(100))
+		t.SetRealtimeValue("DD2996", uint32(100))
 		logger.Log.Println("TCP服务以测试模式启动，无TCP连接建立")
 		return
 	}
@@ -267,6 +267,9 @@ func (t *TCPServer) Read(prefixAddress string, size uint64) {
 		value, _ := strconv.ParseInt(bufferHexStr[18+4*(i+1):18+4*(i+1)+4]+bufferHexStr[18+4*i:18+4*i+4], 16, 64)
 		//value, _ := strconv.ParseInt(string(data[9+2*i:9+2*i+2]), 16, 64)
 		//t.RealtimeValueMap[fmt.Sprintf("DD%d", addressNum+i)] = uint32(value)
+		if addressNum+i == 2934 && uint32(value) > 5000 { // 采集温度大于500度时作为异常不予显示
+			continue
+		}
 		t.SetRealtimeValue(fmt.Sprintf("DD%d", addressNum+i), uint32(value))
 		//t.RealtimeValueMap[fmt.Sprintf("%s%d", prefix, addressNum+i)] = uint32(value)
 		//logger.Log.Printf("%s%d:%d", prefix, addressNum+i, value)

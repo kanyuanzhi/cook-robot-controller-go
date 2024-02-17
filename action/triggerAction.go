@@ -13,6 +13,8 @@ type TriggerAction struct {
 	TriggerAddressValue       *data.AddressValue // 触发地址-值
 	triggerType               data.TriggerType
 	TriggerControlWordAddress string // 使用触发动作的控制字地址
+
+	shutdownChan chan bool
 }
 
 func NewTriggerAction(triggerAddressValue *data.AddressValue, triggerType data.TriggerType, triggerControlWordAddress string) *TriggerAction {
@@ -21,13 +23,26 @@ func NewTriggerAction(triggerAddressValue *data.AddressValue, triggerType data.T
 		TriggerAddressValue:       triggerAddressValue,
 		triggerType:               triggerType,
 		TriggerControlWordAddress: triggerControlWordAddress,
+
+		shutdownChan: make(chan bool),
 	}
 }
 
 func (t *TriggerAction) Execute(writer *operator.Writer, reader *operator.Reader, debugMode bool) {
 	if debugMode {
-		time.Sleep(1 * time.Second)
-		return
+		timer := time.NewTimer(time.Duration(1) * time.Second)
+		exitFlag := false
+		for {
+			select {
+			case <-timer.C:
+				exitFlag = true
+			case <-t.shutdownChan:
+				return
+			}
+			if exitFlag {
+				return
+			}
+		}
 	}
 	time.Sleep(200 * time.Millisecond) // 延时200ms执行trig，确保状态字重置
 	ticker := time.NewTicker(100 * time.Millisecond)
@@ -44,6 +59,8 @@ func (t *TriggerAction) Execute(writer *operator.Writer, reader *operator.Reader
 			if trigSuccessCount == 3 { // 连续3次触发才会判定成功
 				return
 			}
+		case <-t.shutdownChan:
+			return
 		}
 	}
 }
@@ -72,4 +89,9 @@ func (t *TriggerAction) AfterExecuteInfo() string {
 		logger.Log.Println("触发条件错误")
 		return ""
 	}
+}
+
+func (t *TriggerAction) Shutdown() {
+	logger.Log.Printf("[终止]触发%s=%d", t.TriggerAddressValue.Address, t.TriggerAddressValue.Value)
+	t.shutdownChan <- true
 }

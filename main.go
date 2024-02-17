@@ -25,7 +25,11 @@ func main() {
 	time.Sleep(500 * time.Millisecond)
 
 	// 开机自动启动油烟净化
-	if config.Parameter.LampblackPurify.Enable && config.Parameter.LampblackPurify.AutoStart {
+	//if config.Parameter.LampblackPurify.Enable && config.Parameter.LampblackPurify.AutoStart {
+	//	lampblackPurifyInstruction := instruction.NewLampblackPurifyInstruction(config.Parameter.LampblackPurify.AutoStartMode)
+	//	lampblackPurifyInstruction.AddToController(controller)
+	//}
+	if config.Parameter.LampblackPurify.AutoStart {
 		lampblackPurifyInstruction := instruction.NewLampblackPurifyInstruction(config.Parameter.LampblackPurify.AutoStartMode)
 		lampblackPurifyInstruction.AddToController(controller)
 	}

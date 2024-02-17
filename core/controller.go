@@ -20,7 +20,8 @@ type Controller struct {
 	executedActionFlagChan chan bool
 	lastExecutedAction     action.Actioner // 前一个执行的动作
 
-	pauseChan chan bool
+	pauseChan    chan bool
+	shutdownChan chan bool
 
 	CurrentCommandName        string // 当前命令名称 cook|wash|prepare|...
 	CurrentDishUUID           string // 当前正在炒制菜品的uuid
@@ -64,6 +65,7 @@ func NewController(writer *operator.Writer, reader *operator.Reader, tcpServer *
 		executingActionChan:             make(chan action.Actioner),
 		executedActionFlagChan:          make(chan bool, maxActionNumber),
 		pauseChan:                       make(chan bool),
+		shutdownChan:                    make(chan bool),
 		CurrentCommandName:              "",
 		CurrentDishUUID:                 "",
 		CurrentDishCustomStepUUID:       "",
@@ -151,48 +153,50 @@ func (c *Controller) Start() {
 	isNextInstruction := false
 	for {
 		select {
-		case executingAction := <-c.waitingActionChan:
-			isNextInstruction = <-c.InstructionFlagChan
-			if isNextInstruction {
-				c.CurrentInstructionInfo = <-c.InstructionInfoChan
-			}
-			go func() {
-				if c.CurrentCommandName == data.COMMAND_NAME_COOK && executingAction.CheckType() == action.DELAY {
-					// 炒制菜品且当前待执行动作为延时时，
-					if c.lastExecutedAction != nil &&
-						c.lastExecutedAction.CheckType() == action.TRIGGER &&
-						c.lastExecutedAction.GetControlWordAddress() == data.Y_LOCATE_CONTROL_WORD_ADDRESS {
-						// 上一个动作为trigger且由y轴定位动作触发，允许中途加料
-						c.IsPausePermitted = true
+		case executingAction, ok := <-c.waitingActionChan:
+			if !ok {
+				quitFlag = true
+			} else {
+				c.executingAction = executingAction
+				isNextInstruction = <-c.InstructionFlagChan
+				if isNextInstruction {
+					c.CurrentInstructionInfo = <-c.InstructionInfoChan
+				}
+				go func() {
+					if c.CurrentCommandName == data.COMMAND_NAME_COOK && executingAction.CheckType() == action.DELAY {
+						// 炒制菜品且当前待执行动作为延时时，
+						if c.lastExecutedAction != nil &&
+							c.lastExecutedAction.CheckType() == action.TRIGGER &&
+							c.lastExecutedAction.GetControlWordAddress() == data.Y_LOCATE_CONTROL_WORD_ADDRESS {
+							// 上一个动作为trigger且由y轴定位动作触发，允许中途加料
+							c.IsPausePermitted = true
+						}
 					}
-				}
 
-				if executingAction.CheckType() == action.CONTROL && executingAction.GetControlWordAddress() == data.TEMPERATURE_CONTROL_WORD_ADDRESS {
-					c.CurrentHeatingTemperature = executingAction.(*action.TemperatureControlAction).TargetTemperature.Value
-				}
+					if executingAction.CheckType() == action.CONTROL && executingAction.GetControlWordAddress() == data.TEMPERATURE_CONTROL_WORD_ADDRESS {
+						c.CurrentHeatingTemperature = executingAction.(*action.TemperatureControlAction).TargetTemperature.Value
+					}
 
-				if executingAction.CheckType() != action.TRIGGER {
-					logger.Log.Println(executingAction.BeforeExecuteInfo())
-				}
+					if executingAction.CheckType() != action.TRIGGER {
+						logger.Log.Println(executingAction.BeforeExecuteInfo())
+					}
 
-				executingAction.Execute(c.writer, c.reader, c.debugMode)
+					executingAction.Execute(c.writer, c.reader, c.debugMode)
 
-				if executingAction.CheckType() == action.TRIGGER {
-					logger.Log.Println(executingAction.AfterExecuteInfo())
-				}
+					if executingAction.CheckType() == action.TRIGGER {
+						logger.Log.Println(executingAction.AfterExecuteInfo())
+					}
 
-				c.IsPausePermitted = false // 延时结束后不再允许中途加料
-
-				c.lastExecutedAction = <-c.executingActionChan
-				<-c.executedActionFlagChan
-				if len(c.executedActionFlagChan) == 0 {
-					// 所有action执行完毕，关闭waitingActionChan跳出for循环
-					close(c.waitingActionChan)
-					quitFlag = true
-				}
-			}()
-			c.executingAction = executingAction
-			c.executingActionChan <- executingAction
+					c.IsPausePermitted = false // 延时结束后不再允许中途加料
+					c.lastExecutedAction = <-c.executingActionChan
+					<-c.executedActionFlagChan
+					if len(c.executedActionFlagChan) == 0 {
+						// 所有action执行完毕，关闭waitingActionChan跳出for循环
+						close(c.waitingActionChan)
+					}
+				}()
+				c.executingActionChan <- executingAction
+			}
 		case <-c.pauseChan:
 			<-c.pauseChan
 		}
@@ -235,11 +239,23 @@ func (c *Controller) Stop() {
 	c.CurrentDishUUID = ""
 	c.CurrentDishCustomStepUUID = ""
 
+	c.InstructionInfoChan = make(chan *data.InstructionInfo, c.MaxInstructionNumber)
+	c.InstructionFlagChan = make(chan bool, c.MaxActionNumber)
+	c.executedActionFlagChan = make(chan bool, c.MaxActionNumber)
+
 	c.IsRunning = false
 	c.IsCooking = false
 
 	c.IsPausePermitted = false
 	c.CookingTime = 0
+}
+
+func (c *Controller) Shutdown() {
+	c.waitingActionChan = make(chan action.Actioner, c.MaxActionNumber)
+	for len(c.executedActionFlagChan) > 1 {
+		<-c.executedActionFlagChan
+	}
+	c.executingAction.Shutdown()
 }
 
 func (c *Controller) startTiming() {

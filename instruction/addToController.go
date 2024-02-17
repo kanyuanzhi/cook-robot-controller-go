@@ -2,6 +2,7 @@ package instruction
 
 import (
 	"cook-robot-controller-go/action"
+	"cook-robot-controller-go/config"
 	"cook-robot-controller-go/core"
 	"cook-robot-controller-go/data"
 	"cook-robot-controller-go/logger"
@@ -269,9 +270,17 @@ func (ins InitInstruction) AddToController(controller *core.Controller) {
 		data.NewAddressValue(data.R1_ROTATE_MODE_ADDRESS, 1),
 		data.NewAddressValue(data.R1_ROTATE_SPEED_ADDRESS, data.R1_MAX_ROTATE_SPEED/5), // 炒菜启动前R1轴自动以1档转动
 		data.NewAddressValue(data.R1_ROTATE_AMOUNT_ADDRESS, 0))
-	lampblackPurifyControlAction := action.NewLampblackPurifyControlAction(data.LAMPBLACK_PURIFY_CONTROL_WORD_ADDRESS,
-		data.LAMPBLACK_PURIFY_STATUS_WORD_ADDRESS,
-		data.NewAddressValue(data.LAMPBLACK_PURIFY_MODE_ADDRESS, data.LAMPBLACK_PURIFY_PURIFICATION_MODE))
+	var lampblackPurifyControlAction action.Actioner
+	if config.Parameter.LampblackPurify.Enable {
+		lampblackPurifyControlAction = action.NewLampblackPurifyControlAction(data.LAMPBLACK_PURIFY_CONTROL_WORD_ADDRESS,
+			data.LAMPBLACK_PURIFY_STATUS_WORD_ADDRESS,
+			data.NewAddressValue(data.LAMPBLACK_PURIFY_MODE_ADDRESS, data.LAMPBLACK_PURIFY_PURIFICATION_MODE))
+	} else {
+		lampblackPurifyControlAction = action.NewLampblackPurifyControlAction(data.LAMPBLACK_PURIFY_CONTROL_WORD_ADDRESS,
+			data.LAMPBLACK_PURIFY_STATUS_WORD_ADDRESS,
+			data.NewAddressValue(data.LAMPBLACK_PURIFY_MODE_ADDRESS, data.LAMPBLACK_PURIFY_VENTING_MODE))
+	}
+
 	delayAction := action.NewDelayAction(2000)
 	actionNumber := 3
 	controller.AddAction(rotateControlAction)
@@ -401,9 +410,9 @@ func (ins WashInstruction) AddToController(controller *core.Controller) {
 	pumpControlAction := action.NewPumpControlAction(data.PumpNumberToPumpControlWordAddress[data.WASH_PUMP_NUMBER],
 		data.PumpNumberToPumpStatusWordAddress[data.WASH_PUMP_NUMBER],
 		data.NewAddressValue(data.PumpNumberToPumpDurationAddress[data.WASH_PUMP_NUMBER], data.WASH_ADD_WATER_DURATION))
-	temperatureControlAction := action.NewTemperatureControlAction(data.TEMPERATURE_CONTROL_WORD_ADDRESS,
-		data.TEMPERATURE_STATUS_WORD_ADDRESS,
-		data.NewAddressValue(data.TEMPERATURE_ADDRESS, data.WASH_TEMPERATURE))
+	//temperatureControlAction := action.NewTemperatureControlAction(data.TEMPERATURE_CONTROL_WORD_ADDRESS,
+	//	data.TEMPERATURE_STATUS_WORD_ADDRESS,
+	//	data.NewAddressValue(data.TEMPERATURE_ADDRESS, data.WASH_TEMPERATURE))
 	delayAction := action.NewDelayAction(data.WASH_DURATION)
 	temperatureResetAction := action.NewTemperatureControlAction(data.TEMPERATURE_CONTROL_WORD_ADDRESS,
 		data.TEMPERATURE_STATUS_WORD_ADDRESS,
@@ -416,17 +425,22 @@ func (ins WashInstruction) AddToController(controller *core.Controller) {
 	slowDelayAction := action.NewDelayAction(2000)
 	axisR1StopAction := action.NewStopAction(data.R1_ROTATE_CONTROL_WORD_ADDRESS,
 		data.R1_ROTATE_STATUS_WORD_ADDRESS)
+	axisYLocateStirFryControlAction := action.NewAxisLocateControlAction(data.Y_LOCATE_CONTROL_WORD_ADDRESS,
+		data.Y_LOCATE_STATUS_WORD_ADDRESS,
+		data.NewAddressValue(data.Y_LOCATE_POSITION_ADDRESS, data.YPositionToDistance[data.Y_STIR_FRY_3_POSITION]),
+		data.NewAddressValue(data.Y_LOCATE_SPEED_ADDRESS, data.Y_MOVE_SPEED))
 
 	controller.AddAction(axisXLocateControlAction)
 	controller.AddAction(axisYLocateControlAction)
 	controller.AddAction(axisRotateControlAction)
 	controller.AddAction(pumpControlAction)
-	controller.AddAction(temperatureControlAction)
+	//controller.AddAction(temperatureControlAction)
 	controller.AddAction(delayAction)
 	controller.AddAction(temperatureResetAction)
 	controller.AddAction(slowAxisRotateControlAction)
 	controller.AddAction(slowDelayAction)
 	controller.AddAction(axisR1StopAction)
+	controller.AddAction(axisYLocateStirFryControlAction)
 	controller.AddInstructionInfo(data.NewInstructionInfo(string(ins.InstructionType), ins.InstructionName, 18))
 	logger.Log.Printf("[步骤]添加洗锅")
 }
